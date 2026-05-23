@@ -53,7 +53,7 @@ class DmaTechnologiesGrid extends StatelessWidget {
       _DmaTileData(
         title: 'Pharma Care',
         asset: 'assets/icons/dma_pharmaceutical.png',
-        onTap: () => Get.toNamed(Routes.CLEAN_AIR_INDEX),
+      onTap: () => Get.toNamed(Routes.CLEAN_AIR_INDEX),
       ),
       _DmaTileData(
         title: 'Food & Beverage',
