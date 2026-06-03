@@ -62,6 +62,8 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/more/bindings/more_binding.dart';
 import '../modules/more/views/more_view.dart';
+import '../modules/nano_bubble/bindings/nano_bubble_binding.dart';
+import '../modules/nano_bubble/views/nano_bubble_view.dart';
 import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
 import '../modules/otp_verify/bindings/otp_verify_binding.dart';
@@ -372,6 +374,11 @@ class AppPages {
       name: _Paths.CATTLE_LIVE_DATA,
       page: () => const CattleLiveDataView(),
       binding: CattleLiveDataBinding(),
+    ),
+    GetPage(
+      name: _Paths.NANO_BUBBLE,
+      page: () => const NanoBubbleView(),
+      binding: NanoBubbleBinding(),
     ),
   ];
 }

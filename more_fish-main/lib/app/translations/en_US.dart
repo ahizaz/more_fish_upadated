@@ -20,6 +20,8 @@ const Map<String, String> enUS = {
   'grown_fish_sell': 'Grown Fish Sell',
   'fish_medicine_enzyme': 'Fish Medicine & Enzyme',
   'fcr_calculator': 'FCR Calculator',
+  'nano_bubble_aeration_system': 'Nano Bubble Aeration System',
+  'fish_pond_filtration_system': 'Fish Pond Filtration System',
 
   'fish_feed_marketplace': "Fish Feed Marketplace",
   'training_workshop': 'Training & Workshop',

@@ -467,8 +467,12 @@ class HomeView extends GetView<HomeController> {
                     );
                   }
                 }
-              } else {
+              } else if (index == 10) {
                 Get.toNamed(Routes.FCR_CALCULATOR);
+              } else if (index == 11) {
+                Get.toNamed(Routes.NANO_BUBBLE);
+              } else {
+                Get.toNamed(Routes.COMING_SOON);
               }
             },
             child: CommonContainer(
@@ -533,8 +537,12 @@ class HomeView extends GetView<HomeController> {
             Get.toNamed(Routes.AERATOR_CONNECTION);
           } else if (index == 4) {
             Get.toNamed(Routes.FEEDER_CONNECTION);
-          } else {
+          } else if (index == 5) {
             Get.toNamed(Routes.WEATHER_FORECAST);
+          } else if (index == 6) {
+            Get.toNamed(Routes.SMART_KHAMARI);
+          } else {
+            Get.toNamed(Routes.COMING_SOON);
           }
         },
         child: CommonContainer(

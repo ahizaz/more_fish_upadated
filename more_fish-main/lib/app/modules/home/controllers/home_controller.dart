@@ -30,6 +30,7 @@ class HomeController extends GetxController {
     "grown_fish_sell",
     "fish_medicine_enzyme",
     "FCR Calculator",
+    "nano_bubble_aeration_system",
   ].obs;
 
   var iconList1 = [
@@ -44,6 +45,7 @@ class HomeController extends GetxController {
     "assets/icons/grown_fish.png",
     "assets/icons/fish_medicine.png",
     "assets/icons/feed_management.png",
+    "assets/icons/bubble.png",
   ].obs;
 
   var listItemsEnglish2 = [
@@ -55,6 +57,7 @@ class HomeController extends GetxController {
     "weather_forecast",
     "smart_khamari",
     "emergency_service",
+    "fish_pond_filtration_system",
   ].obs;
 
   var iconList2 = [
@@ -66,6 +69,7 @@ class HomeController extends GetxController {
     "assets/icons/weather_forecast.png",
     "assets/icons/community.png",
     "assets/icons/24_hours_support.png",
+    "assets/icons/pond.png",
   ].obs;
 
   var listItemsBangla1 = [

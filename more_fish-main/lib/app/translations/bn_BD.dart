@@ -20,6 +20,8 @@ const Map<String, String> bnBD = {
   'grown_fish_sell': 'বড় মাছ বিক্রয়',
   'fish_medicine_enzyme': 'মাছের ওষুধ ও এনজাইম',
   'fcr_calculator': 'FCR Calculator',
+  'nano_bubble_aeration_system': 'ন্যানো বাবল এয়ারেশন সিস্টেম',
+  'fish_pond_filtration_system': 'ফিশ পন্ড ফিল্ট্রেশন সিস্টেম',
 
   'fish_feed_marketplace': "মাছের খাবারের বাজার",
   'training_workshop': 'প্রশিক্ষণ ও কর্মশালা',

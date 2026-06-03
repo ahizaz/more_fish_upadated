@@ -186,6 +186,7 @@ class CommonAppBar extends StatelessWidget {
     this.humidity,
     this.temp,
     this.actions,
+    this.leading,
   });
 
   final String title;
@@ -199,6 +200,7 @@ class CommonAppBar extends StatelessWidget {
   final String? temp;
   final String? humidity;
   final List<Widget>? actions;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -216,15 +218,16 @@ class CommonAppBar extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: Image.asset(
-                    logoAssetPath ?? "assets/icons/logo_trade_mark.jpg",
-                    height: 50,
-                    width: 50,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+                leading ??
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: Image.asset(
+                        logoAssetPath ?? "assets/icons/logo_trade_mark.jpg",
+                        height: 50,
+                        width: 50,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(

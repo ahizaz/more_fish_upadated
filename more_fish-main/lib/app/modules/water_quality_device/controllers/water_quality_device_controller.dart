@@ -437,10 +437,13 @@ class WaterQualityDeviceController extends GetxController {
   }) async {
     if (isOnline == false) {
       try {
-        Get.snackbar(
-          'Error',
-          'This aerator is offline',
+        Get.rawSnackbar(
+          title: 'Error',
+          message: 'This aerator is offline',
           snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.8),
+          margin: const EdgeInsets.all(10),
+          borderRadius: 10,
         );
       } catch (_) {}
       return;
@@ -471,7 +474,14 @@ class WaterQualityDeviceController extends GetxController {
         debugPrint('[API] setAeratorCommand() failed -> $errorMsg');
 
         try {
-          Get.snackbar('Error', errorMsg, snackPosition: SnackPosition.BOTTOM);
+          Get.rawSnackbar(
+            title: 'Error',
+            message: errorMsg,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.withOpacity(0.8),
+            margin: const EdgeInsets.all(10),
+            borderRadius: 10,
+          );
         } catch (_) {}
 
         // No optimistic update, so no need to revert switch
@@ -488,10 +498,13 @@ class WaterQualityDeviceController extends GetxController {
         aeratorCommandResponse.value = r;
 
         try {
-          Get.snackbar(
-            'Success',
-            r.msg ?? 'Command sent successfully',
+          Get.rawSnackbar(
+            title: 'Success',
+            message: r.msg ?? 'Command sent successfully',
             snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.withOpacity(0.8),
+            margin: const EdgeInsets.all(10),
+            borderRadius: 10,
           );
         } catch (_) {}
 
