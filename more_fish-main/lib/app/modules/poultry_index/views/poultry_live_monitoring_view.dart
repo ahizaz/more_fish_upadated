@@ -21,10 +21,11 @@ class PoultryLiveMonitoringView extends StatelessWidget {
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: const Color(0xffebffff),
-        body: Column(
-          children: [
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: const Color(0xffebffff),
+          body: Column(
+            children: [
             Obx(
               () => CommonAppBar(
                 title: 'Poultry Care',
@@ -53,6 +54,7 @@ class PoultryLiveMonitoringView extends StatelessWidget {
           ],
         ),
       ),
+    )
     );
   }
 }
@@ -357,6 +359,8 @@ class _SwitchesSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final bool isOnline = live?.isOnline ?? false;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
@@ -374,11 +378,21 @@ class _SwitchesSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 8),
-            child: Text(
-              'Switch Controls',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.circle,
+                  color: isOnline ? Colors.green : Colors.red,
+                  size: 14,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Switch Controls',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+              ],
             ),
           ),
           LayoutBuilder(
@@ -393,7 +407,11 @@ class _SwitchesSection extends StatelessWidget {
                     .map(
                       (item) => SizedBox(
                         width: itemWidth,
-                        child: _SwitchCard(controller: controller, item: item),
+                        child: _SwitchCard(
+                          controller: controller,
+                          item: item,
+                          isDeviceOnline: isOnline,
+                        ),
                       ),
                     )
                     .toList(),
@@ -407,10 +425,15 @@ class _SwitchesSection extends StatelessWidget {
 }
 
 class _SwitchCard extends StatelessWidget {
-  const _SwitchCard({required this.controller, required this.item});
+  const _SwitchCard({
+    required this.controller,
+    required this.item,
+    required this.isDeviceOnline,
+  });
 
   final PoultryLiveMonitoringController controller;
   final PoultrySwitch item;
+  final bool isDeviceOnline;
 
   @override
   Widget build(BuildContext context) {
@@ -418,27 +441,44 @@ class _SwitchCard extends StatelessWidget {
       final busy = controller.switchBusy[item.switchId] ?? false;
       final value = controller.switchUiState[item.switchId] ?? item.isOn;
 
+      final bool canInteract = isDeviceOnline && item.isActive && !busy;
+
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 216, 226, 180),
+          color: isDeviceOnline
+              ? const Color.fromARGB(255, 216, 226, 180)
+              : Colors.grey.shade300,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.black12),
+          border: Border.all(
+            color: value ? Colors.green.withOpacity(0.5) : Colors.black12,
+            width: value ? 1.5 : 1,
+          ),
+          boxShadow: [
+            if (value && isDeviceOnline)
+              BoxShadow(
+                color: Colors.green.withOpacity(0.2),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+          ],
         ),
         child: Row(
           children: [
             Expanded(
               child: Text(
                 item.switchName.isEmpty ? item.switchId : item.switchName,
-                style: const TextStyle(
-                  fontSize: 18,
+                style: TextStyle(
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
+                  color: isDeviceOnline ? Colors.black : Colors.grey.shade600,
                 ),
               ),
             ),
             Switch(
               value: value,
-              onChanged: (!item.isActive || busy)
+              activeColor: isDeviceOnline ? null : Colors.grey,
+              onChanged: !canInteract
                   ? null
                   : (v) {
                       controller.onSwitchChanged(item: item, nextValue: v);
@@ -473,14 +513,14 @@ class _MetricCard extends StatelessWidget {
     final w = (MediaQuery.of(context).size.width - 14 * 2 - 12) / 2;
     return SizedBox(
       width: w,
-      height: 178,
+      height: 155,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: const Color(0xfff3f4c5),
               borderRadius: BorderRadius.circular(16),
@@ -497,11 +537,11 @@ class _MetricCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (iconAsset != null)
-                  Image.asset(iconAsset!, height: 56, fit: BoxFit.contain)
+                  Image.asset(iconAsset!, height: 48, fit: BoxFit.contain)
                 else
                   Icon(
                     iconData ?? Icons.sensors,
-                    size: 42,
+                    size: 38,
                     color: Colors.black87,
                   ),
                 const SizedBox(height: 6),
@@ -511,7 +551,7 @@ class _MetricCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: statusColor,
                   ),
@@ -523,7 +563,7 @@ class _MetricCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: statusColor,
                   ),
@@ -574,6 +614,14 @@ IconData _dynamicMetricIcon(String name) {
 
 String? _metricIconAsset(String name) {
   switch (name) {
+    case 'pm1':
+    case 'pm1_0':
+    case 'pm25':
+    case 'pm2_5':
+    case 'pm4':
+    case 'pm4_0':
+    case 'pm10':
+      return 'assets/icons/poultry_ch4.png';
     case 'aqi':
       return 'assets/icons/poultry_co.png';
     case 'nh3_gas':

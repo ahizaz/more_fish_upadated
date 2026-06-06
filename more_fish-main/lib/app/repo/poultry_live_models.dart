@@ -1,6 +1,7 @@
 class PoultryLiveData {
   final String deviceId;
   final String deviceStatus;
+  final bool isOnline;
   final String timestamp; // ISO or formatted
   final double? aqi;
   final double nh3MgL;
@@ -28,6 +29,7 @@ class PoultryLiveData {
   const PoultryLiveData({
     required this.deviceId,
     required this.deviceStatus,
+    this.isOnline = false,
     required this.timestamp,
     this.aqi,
     required this.nh3MgL,
@@ -53,9 +55,17 @@ class PoultryLiveData {
       return int.tryParse('$v') ?? 0;
     }
 
+    bool _boolVal(dynamic v) {
+      if (v is bool) return v;
+      if (v is num) return v != 0;
+      final s = v.toString().toLowerCase();
+      return s == 'true' || s == '1' || s == 'online';
+    }
+
     return PoultryLiveData(
       deviceId: (json['deviceId'] ?? '').toString(),
       deviceStatus: (json['device_status'] ?? '').toString(),
+      isOnline: _boolVal(json['is_online'] ?? false),
       timestamp: (json['timestamp'] ?? '').toString(),
       aqi: (json['aqi'] is num)
           ? (json['aqi'] as num).toDouble()
@@ -98,6 +108,7 @@ class PoultryLiveData {
   Map<String, dynamic> toJson() => {
     'deviceId': deviceId,
     'device_status': deviceStatus,
+    'is_online': isOnline,
     'timestamp': timestamp,
     'aqi': aqi,
     'nh3': nh3MgL,

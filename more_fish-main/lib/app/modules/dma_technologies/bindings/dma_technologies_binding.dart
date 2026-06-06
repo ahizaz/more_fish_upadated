@@ -9,10 +9,10 @@ class DmaTechnologiesBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<DmaTechnologiesController>(() => DmaTechnologiesController());
+    Get.put(CattleHeaderController());
 
     final storage = Get.find<LoginTokenStorage>();
     if (storage.hasValidCattleToken()) {
-      Get.put(CattleHeaderController());
       Get.put(CattleLiveMonitoringController());
     }
   }

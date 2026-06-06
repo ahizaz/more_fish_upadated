@@ -1,173 +1,3 @@
-// app/common_widgets/common_app_bar.dart
-/*import 'package:flutter/material.dart';
-
-import 'common_text.dart';
-
-
-class CommonAppBar extends StatelessWidget{
-
-  CommonAppBar({required this.title, required this.cityName, this.date, this.time, this.humidity, this.temp, this.actions});
-
-  final String title;
-  final String cityName;
-  final String? date;
-  final String? time;
-  final String? temp;
-  final String? humidity;
-  final List<Widget>? actions;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(top: 0, left: 12, right: 12),
-      height: 75,
-      decoration: BoxDecoration(
-        color: Color(0xffd4fcfd),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Column(
-                    children: [
-                      ClipRRect(
-                        child: Image.asset(
-                          "assets/icons/logo_trade_mark.jpg",
-                          height: 60,
-                          width: 60,
-                        ),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: 8,),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                date??"",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                time??"",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(width: 16,),
-                          Container(
-                            height: 30,
-                            width: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.blueGrey,
-                              borderRadius: BorderRadius.circular(100)
-                            ),
-                            child: Center( 
-                              child: Text(
-                                "B",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-
-                    ],
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.location_on_outlined, color: Colors.green, size: 16,),
-                          SizedBox(width: 2,),
-                          CommonText(
-                            cityName,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          )
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Column(
-                            children: [
-                              CommonText(
-                                'Air Temp',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              CommonText(
-                                temp??'',
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ],
-                          ),
-                          SizedBox(width: 8,),
-                          Column(
-                            children: [
-                              CommonText(
-                                'Humidity',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              CommonText(
-                                humidity??'',
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ],
-                          ),
-
-                        ],
-                      ),
-                    ],
-                  )
-                ],
-              )
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-
-}*/
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../modules/cattle_index/controllers/cattle_header_controller.dart';
@@ -213,8 +43,6 @@ class CommonAppBar extends StatelessWidget {
     final storage = Get.find<LoginTokenStorage>();
 
     return Obx(() {
-      // 🔹 Ensuring Obx always has an observable to track.
-      // This prevents "Improper use of GetX" error when CattleHeaderController is not registered.
       final bool loggedIn = storage.isCattleLoggedIn.value;
 
       String finalCityName = cityName;
@@ -234,130 +62,143 @@ class CommonAppBar extends StatelessWidget {
         }
       }
 
+      // Consistent height to prevent UI jumping
+      const double appBarHeight = 128;
+
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        height: finalDescription != null ? 110 : 80,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        height: appBarHeight,
         decoration: BoxDecoration(
           color: backgroundColor ?? const Color(0xffd4fcfd),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // 🔹 Left side: Logo + Title + Date/Time + Language button
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  leading ??
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(100),
-                        child: Image.asset(
-                          logoAssetPath ?? "assets/icons/logo_trade_mark.jpg",
-                          height: 50,
-                          width: 50,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
+        child: SafeArea(
+          bottom: false,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // 🔹 Left side: Logo + Title + Date/Time + Language button
+              Expanded(
+                flex: 12,
+                child: Row(
+                  children: [
+                    leading ??
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: Image.asset(
+                            logoAssetPath ?? "assets/icons/logo_trade_mark.jpg",
+                            height: 50,
+                            width: 50,
+                            fit: BoxFit.contain,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  date ?? "",
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor,
-                                  ),
-                                ),
-                                Text(
-                                  time ?? "",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor,
-                                  ),
-                                ),
-                              ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
                             ),
-                            const SizedBox(width: 12),
-                            PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'bn') {
-                                  Get.updateLocale(const Locale('bn', 'BD'));
-                                  return;
-                                }
-                                Get.updateLocale(const Locale('en', 'US'));
-                              },
-                              itemBuilder: (context) => const [
-                                PopupMenuItem<String>(
-                                  value: 'en',
-                                  child: Text('Eng'),
+                          ),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      date ?? "",
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    Text(
+                                      time ?? "",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                PopupMenuItem<String>(
-                                  value: 'bn',
-                                  child: Text('বাংলা'),
-                                ),
-                              ],
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              offset: const Offset(0, 34),
-                              child: Container(
-                                height: 28,
-                                width: 55,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xff8beeef),
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    (Get.locale?.languageCode ?? 'en') == 'bn'
-                                        ? 'বাংলা'
-                                        : 'Eng',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
+                                const SizedBox(width: 8),
+                                PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'bn') {
+                                      Get.updateLocale(const Locale('bn', 'BD'));
+                                      return;
+                                    }
+                                    Get.updateLocale(const Locale('en', 'US'));
+                                  },
+                                  itemBuilder: (context) => const [
+                                    PopupMenuItem<String>(
+                                      value: 'en',
+                                      child: Text('Eng'),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'bn',
+                                      child: Text('বাংলা'),
+                                    ),
+                                  ],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  offset: const Offset(0, 34),
+                                  child: Container(
+                                    height: 26,
+                                    width: 50,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xff8beeef),
+                                      borderRadius: BorderRadius.circular(100),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        (Get.locale?.languageCode ?? 'en') == 'bn'
+                                            ? 'বাংলা'
+                                            : 'Eng',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // 🔹 Right side: Weather info + optional actions
-            Row(
-              children: [
-                Column(
+              const SizedBox(width: 5),
+
+              // 🔹 Right side: Weather info
+              Expanded(
+                flex: 10,
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Icon(
                           Icons.location_on_outlined,
@@ -365,28 +206,35 @@ class CommonAppBar extends StatelessWidget {
                           size: 16,
                         ),
                         const SizedBox(width: 2),
-                        CommonText(
-                          finalCityName,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: textColor,
+                        Flexible(
+                          child: Text(
+                            finalCityName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Column(
                           children: [
                             CommonText(
                               tempLabel ?? 'Air Temp',
-                              fontSize: 10,
+                              fontSize: 9,
                               fontWeight: FontWeight.w500,
                               color: textColor,
                             ),
                             CommonText(
                               finalTemp ?? '',
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: textColor,
                             ),
@@ -397,13 +245,13 @@ class CommonAppBar extends StatelessWidget {
                           children: [
                             CommonText(
                               humidityLabel ?? 'Humidity',
-                              fontSize: 10,
+                              fontSize: 9,
                               fontWeight: FontWeight.w500,
                               color: textColor,
                             ),
                             CommonText(
                               finalHumidity ?? '',
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: textColor,
                             ),
@@ -411,28 +259,29 @@ class CommonAppBar extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (finalDescription != null) ...[
-                      const SizedBox(height: 4),
+                    const SizedBox(height: 4),
+                    CommonText(
+                      finalDescription ?? '',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blueGrey,
+                      maxLines: 1,
+                    ),
+                    if (finalSunlight != null && finalSunlight!.isNotEmpty)
                       CommonText(
-                        finalDescription,
+                        "Sunlight: $finalSunlight",
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blueGrey,
-                      ),
-                      if (finalSunlight != null && finalSunlight.isNotEmpty)
-                        CommonText(
-                          "Sunlight: $finalSunlight",
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.orange,
-                        ),
-                    ],
+                        fontWeight: FontWeight.w500,
+                        color: Colors.orange,
+                        maxLines: 1,
+                      )
+                    else
+                      const SizedBox(height: 12),
                   ],
                 ),
-                //if (actions != null) ...actions!,
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       );
     });

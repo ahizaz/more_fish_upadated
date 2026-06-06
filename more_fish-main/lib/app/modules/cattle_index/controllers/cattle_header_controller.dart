@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -7,8 +8,10 @@ import 'package:http/http.dart' as http;
 
 import '../../../service/service.dart';
 import '../../../response/cattle_farrm_dashboard_response.dart';
+import '../../../service/local_storage.dart';
 
-/// Handles Cattle Care header values (date/time + weather)
+/// Handles Cattle Care, Poultry Pulse, More Fish, and Pharma Care header values.
+/// This controller serves as the master weather provider for the CommonAppBar.
 class CattleHeaderController extends GetxController {
   final formattedDate = ''.obs;
   final formattedTime = ''.obs;
@@ -24,7 +27,12 @@ class CattleHeaderController extends GetxController {
   final isUsingBackendData = false.obs;
 
   Timer? _timer;
-
+  String _lastRoute = '';
+  
+  // Cache to prevent flickering and excessive OWM calls
+  String _lastCityFetched = '';
+  DateTime? _lastOWMFetch;
+  
   final String _apiKey = ApiService.apiKey;
   final String city = 'dhaka';
 
@@ -32,33 +40,200 @@ class CattleHeaderController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // Start local clock
+    // Start local clock and route monitor
     _tick();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
 
-    // Initial fallback weather
-    fetchWeatherData(city);
+    // Initial weather fetch
+    refreshWeather();
   }
 
   void _tick() {
     final now = DateTime.now();
     formattedDate.value = DateFormat('d-MMM-yyyy').format(now);
     formattedTime.value = DateFormat('h:mm:ss a').format(now);
+
+    // Refresh weather if user navigated to a different module
+    final currentRoute = Get.currentRoute;
+    if (currentRoute != _lastRoute) {
+      log("Route changed from '$_lastRoute' to '$currentRoute'. Refreshing weather...");
+      _lastRoute = currentRoute;
+      refreshWeather();
+    }
   }
 
-  /// Updates header with real-time data from farm dashboard backend
+  /// Updates header with real-time data from farm dashboard backend.
+  /// Called manually by monitoring controllers to sync instantly.
   void updateFromDashboard(Weather? weather) {
-    if (weather == null) return;
+    // SECURITY: Ignore updates if the current screen is NOT cattle-related.
+    // This prevents background Cattle polls from overwriting Poultry/MoreFish weather.
+    final route = Get.currentRoute.toLowerCase();
+    if (!route.contains('cattle')) {
+      return;
+    }
 
-    isUsingBackendData.value = true;
-    district.value = weather.weatherDistrict?.district ?? 'Dhaka';
-    description.value = weather.weatherDescription ?? '';
-    sunlight.value = weather.sunlightLevel ?? '';
-    tempText.value = "${weather.weatherTemperature}°C";
-    humidityText.value = "${weather.weatherHumidity}%";
+    if (weather == null) {
+      if (isUsingBackendData.value) {
+        log("Cattle Dashboard weather is null. Falling back to Dhaka default.");
+        fetchWeatherData(city);
+      }
+      return;
+    }
+
+    // Update if data is actually new
+    final newDistrict = weather.weatherDistrict?.district ?? 'Dhaka';
+    final newTemp = "${weather.weatherTemperature}°C";
+    
+    if (district.value != newDistrict || tempText.value != newTemp) {
+      isUsingBackendData.value = true;
+      district.value = newDistrict;
+      description.value = weather.weatherDescription ?? '';
+      sunlight.value = weather.sunlightLevel ?? '';
+      tempText.value = newTemp;
+      humidityText.value = "${weather.weatherHumidity}%";
+      log("Header updated from Cattle Dashboard: ${district.value}, ${tempText.value}");
+    }
+  }
+
+  /// Refreshes weather data based on the current module and logged-in user.
+  Future<void> refreshWeather({String? overrideId}) async {
+    final storage = Get.find<LoginTokenStorage>();
+    
+    // Determine login status across all modules
+    bool loggedIn = storage.hasValidCattleToken() || 
+                    storage.hasValidPoultryToken() || 
+                    storage.hasValidMoreFishToken() || 
+                    storage.hasValidPharmaToken();
+
+    storage.isCattleLoggedIn.value = loggedIn;
+
+    if (!loggedIn) {
+      log("NO-LOGIN: Using Dhaka defaults.");
+      await fetchWeatherData(city);
+      return;
+    }
+
+    final route = Get.currentRoute.toLowerCase();
+    String? listUrl;
+    String? dashboardUrlPrefix;
+    String? token;
+
+    // 1. Cattle Care
+    if (route.contains('cattle')) {
+      token = storage.getCattleToken();
+      if (token != null) {
+        listUrl = "${ApiService.baseUrl}/cattle_care/farms/list/";
+        dashboardUrlPrefix = "${ApiService.baseUrl}/cattle_care/farms/dashboard/?farm_id=";
+      }
+    } 
+    // 2. Poultry Care
+    else if (route.contains('poultry')) {
+      token = storage.getPoultryToken();
+      if (token != null) {
+        listUrl = "${ApiService.baseUrl}/poultry_care/farms/list/";
+        dashboardUrlPrefix = "${ApiService.baseUrl}/poultry_care/farms/dashboard/?farm_id=";
+      }
+    } 
+    // 3. More Fish / Pharma Care
+    else if (route.contains('more') || route.contains('pharma') || route.contains('index') || route.contains('pond') || route.contains('water')) {
+      final bool isPharma = route.contains('pharma');
+      token = isPharma ? storage.getPharmaToken() : storage.getMoreFishToken();
+      if (token != null) {
+        listUrl = "${ApiService.baseUrl}/devices/data/pond/list";
+        dashboardUrlPrefix = "${ApiService.baseUrl}/devices/data/pond/data?asset_id=";
+      }
+    }
+
+    if (token != null && dashboardUrlPrefix != null) {
+      if (overrideId != null) {
+        log("Fetching backend weather with override ID: $overrideId");
+        await _fetchBackendWeather("$dashboardUrlPrefix$overrideId", token);
+      } else if (listUrl != null) {
+        log("Refreshing backend weather from list: $listUrl");
+        await _fetchFromList(listUrl, dashboardUrlPrefix, token);
+      }
+    } else {
+      log("Route '$route' not mapped to weather backend. Falling back to Dhaka.");
+      await fetchWeatherData(city);
+    }
+  }
+
+  Future<void> _fetchFromList(String listUrl, String dashboardUrlPrefix, String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse(listUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonMap = json.decode(response.body);
+        final List? dataList = jsonMap['data'];
+        
+        if (dataList != null && dataList.isNotEmpty) {
+          final id = dataList[0]['id'];
+          await _fetchBackendWeather("$dashboardUrlPrefix$id", token);
+          return;
+        }
+      }
+    } catch (e) {
+      log("List API Error: $e");
+    }
+
+    isUsingBackendData.value = false;
+    await fetchWeatherData(city);
+  }
+
+  Future<void> _fetchBackendWeather(String url, String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonMap = json.decode(response.body);
+        final data = jsonMap['data'];
+        final weatherData = data != null ? data['weather'] : null;
+
+        if (weatherData != null) {
+          isUsingBackendData.value = true;
+          district.value = weatherData['weather_district']?['district'] ?? 'Dhaka';
+          description.value = weatherData['weather_description'] ?? '';
+          sunlight.value = weatherData['sunlight_level'] ?? '';
+
+          final temp = weatherData['weather_temperature'];
+          final hum = weatherData['weather_humidity'];
+
+          tempText.value = temp != null ? "$temp°C" : "";
+          humidityText.value = hum != null ? "$hum%" : "";
+          log("Weather Updated: ${district.value}, ${tempText.value}");
+          return;
+        } else {
+          log("Backend weather node is null. Falling back to Dhaka.");
+        }
+      }
+    } catch (e) {
+      log("Backend weather error: $e");
+    }
+
+    isUsingBackendData.value = false;
+    await fetchWeatherData(city);
   }
 
   Future<void> fetchWeatherData(String city) async {
+    // Throttle OWM requests
+    if (_lastCityFetched == city && _lastOWMFetch != null) {
+      if (DateTime.now().difference(_lastOWMFetch!) < const Duration(minutes: 5)) {
+        return;
+      }
+    }
+
     isLoadingWeather.value = true;
     weatherError.value = '';
     try {
@@ -80,12 +255,19 @@ class CattleHeaderController extends GetxController {
         
         if (weatherArr.isNotEmpty) {
           description.value = weatherArr[0]['description'] ?? '';
+        } else {
+          description.value = '';
         }
-      } else {
-        weatherError.value = 'Weather unavailable';
+        district.value = city.capitalizeFirst ?? city;
+        sunlight.value = ''; 
+        isUsingBackendData.value = false;
+        
+        _lastCityFetched = city;
+        _lastOWMFetch = DateTime.now();
+        log("OWM Fallback Success: $city, ${tempText.value}");
       }
-    } catch (_) {
-      weatherError.value = 'Weather unavailable';
+    } catch (e) {
+      log("OWM Error: $e");
     } finally {
       isLoadingWeather.value = false;
     }

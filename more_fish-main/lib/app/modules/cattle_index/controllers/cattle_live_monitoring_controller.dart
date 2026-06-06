@@ -34,7 +34,8 @@ class CattleLiveMonitoringController extends GetxController {
   void _startBackgroundRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (selectedDeviceId.value.isNotEmpty) {
+      // Only refresh if Cattle screen is active
+      if (selectedDeviceId.value.isNotEmpty && Get.currentRoute.toLowerCase().contains('cattle')) {
         refreshLiveData(showLoader: false);
       }
     });

@@ -9,6 +9,7 @@ import '../../../repo/poultry_live_models.dart';
 import '../../../repo/poultry_live_repo.dart';
 import '../../../routes/app_pages.dart';
 import '../../../service/local_storage.dart';
+import 'package:more_fish/app/modules/cattle_index/controllers/cattle_header_controller.dart';
 
 class PoultryLiveMonitoringController extends GetxController
     with WidgetsBindingObserver {
@@ -167,9 +168,19 @@ class PoultryLiveMonitoringController extends GetxController
       }
       error.value = '';
 
-      liveData.value = await _repo.getLatestLiveData(deviceId: id);
+      final data = await _repo.getLatestLiveData(deviceId: id);
+      liveData.value = data;
       _syncSwitchUiStateWithLiveData();
       await _cacheLiveData(liveData.value);
+
+      // ✅ Update the global header with weather from the current farm dashboard
+      // We need the raw dashboard data for the weather, but PoultryLiveData doesn't have it.
+      // However, we can trigger a targeted refresh in the header if we want, 
+      // or we could have the repo return the weather too.
+      // For now, let's just trigger a header refresh which will pick up the current route.
+      if (Get.isRegistered<CattleHeaderController>()) {
+        Get.find<CattleHeaderController>().refreshWeather(overrideId: id);
+      }
     } catch (e) {
       error.value = e.toString();
     } finally {
@@ -220,9 +231,6 @@ class PoultryLiveMonitoringController extends GetxController
     switchBusy[item.switchId] = true;
 
     try {
-      final loadingText = nextValue
-          ? 'The switch is turning on'
-          : 'The switch is turning off';
       // loader removed
 
       debugPrint(
@@ -254,8 +262,10 @@ class PoultryLiveMonitoringController extends GetxController
     _pollTimer?.cancel();
 
     _pollTimer = Timer.periodic(_refreshInterval, (_) {
-      // Poll dashboard every minute to keep switch states updated.
-      refreshLiveData(silent: true);
+      // Only poll if Poultry screen is active
+      if (Get.currentRoute.toLowerCase().contains('poultry')) {
+        refreshLiveData(silent: true);
+      }
     });
   }
 

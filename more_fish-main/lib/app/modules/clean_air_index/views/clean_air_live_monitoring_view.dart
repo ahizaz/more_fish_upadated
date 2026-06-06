@@ -544,156 +544,134 @@ class CleanAirLiveMonitoringView
                                               final bool isOnline =
                                                   aerator.isOnline == true;
 
-                                              return CommonContainer(
-                                                margin: const EdgeInsets.only(
-                                                  left: 14,
-                                                  right: 14,
-                                                  bottom: 16,
-                                                ),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 16,
-                                                      vertical: 6,
-                                                    ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Container(
-                                                          width: 18,
-                                                          height: 18,
-                                                          decoration: BoxDecoration(
-                                                            color: isOnline
-                                                                ? const Color(
-                                                                    0xff2fbf71,
-                                                                  )
-                                                                : const Color(
-                                                                    0xffe74c3c,
-                                                                  ),
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 12,
-                                                        ),
-                                                        SizedBox(
-                                                          width:
-                                                              MediaQuery.of(
-                                                                context,
-                                                              ).size.width -
-                                                              220,
-                                                          child: CommonText(
-                                                            aerator.aeratorName,
-                                                            fontSize: 20,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            maxLines: 1,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    Obx(() {
-                                                      final bool
-                                                      switchValue = controller
-                                                          .aeratorSwitchValueFor(
-                                                            aerator.aeratorPk,
-                                                            fallback:
-                                                                aerator
-                                                                    .isRunning ==
-                                                                true,
-                                                          );
+                                              return Obx(() {
+                                                final bool switchValue =
+                                                    controller.aeratorSwitchValueFor(
+                                                  aerator.aeratorPk,
+                                                  fallback: aerator.isRunning == true,
+                                                );
 
-                                                      return Switch(
+                                                return CommonContainer(
+                                                  margin: const EdgeInsets.only(
+                                                    left: 14,
+                                                    right: 14,
+                                                    bottom: 16,
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 6,
+                                                  ),
+                                                  border: Border.all(
+                                                    color: switchValue
+                                                        ? Colors.green.withOpacity(0.5)
+                                                        : Colors.black12,
+                                                    width: switchValue ? 1.5 : 1,
+                                                  ),
+                                                  boxShadow: [
+                                                    if (switchValue && isOnline)
+                                                      BoxShadow(
+                                                        color: Colors.green.withOpacity(0.2),
+                                                        blurRadius: 10,
+                                                        spreadRadius: 2,
+                                                      ),
+                                                  ],
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Container(
+                                                            width: 18,
+                                                            height: 18,
+                                                            decoration: BoxDecoration(
+                                                              color: isOnline
+                                                                  ? const Color(
+                                                                      0xff2fbf71,
+                                                                    )
+                                                                  : const Color(
+                                                                      0xffe74c3c,
+                                                                    ),
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 12,
+                                                          ),
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                  context,
+                                                                ).size.width -
+                                                                220,
+                                                            child: CommonText(
+                                                              aerator.aeratorName,
+                                                              fontSize: 20,
+                                                              fontWeight:
+                                                                  FontWeight.bold,
+                                                              overflow:
+                                                                  TextOverflow.ellipsis,
+                                                              maxLines: 1,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Switch(
                                                         key: ValueKey(
                                                           aerator.aeratorPk,
                                                         ),
                                                         value: switchValue,
-                                                        onChanged:
-                                                            !isOnline ||
-                                                                controller
-                                                                    .isAeratorBusy(
-                                                                      aerator
-                                                                          .aeratorPk,
-                                                                    )
+                                                        onChanged: !isOnline ||
+                                                                controller.isAeratorBusy(
+                                                                  aerator.aeratorPk,
+                                                                )
                                                             ? null
                                                             : (bool value) {
                                                                 controller.aeratorCommand(
-                                                                  id: aerator
-                                                                      .aeratorId,
-                                                                  command: value
-                                                                      ? 1
-                                                                      : 0,
+                                                                  id: aerator.aeratorId,
+                                                                  command: value ? 1 : 0,
                                                                   index: index,
-                                                                  isOnline:
-                                                                      isOnline,
-                                                                  aeratorPk: aerator
-                                                                      .aeratorPk,
+                                                                  isOnline: isOnline,
+                                                                  aeratorPk:
+                                                                      aerator.aeratorPk,
                                                                 );
                                                               },
-                                                        thumbColor: MaterialStateProperty.resolveWith<Color>((
-                                                          states,
-                                                        ) {
-                                                          final isDisabled =
-                                                              states.contains(
-                                                                MaterialState
-                                                                    .disabled,
-                                                              );
-
+                                                        thumbColor: MaterialStateProperty
+                                                            .resolveWith<Color>((states) {
+                                                          final isDisabled = states
+                                                              .contains(MaterialState
+                                                                  .disabled);
                                                           if (isDisabled) {
                                                             return switchValue
-                                                                ? const Color(
-                                                                    0xff93b39f,
-                                                                  )
+                                                                ? const Color(0xff93b39f)
                                                                 : const Color(
-                                                                    0xffb59a97,
-                                                                  );
+                                                                    0xffb59a97);
                                                           }
-
                                                           return switchValue
                                                               ? Colors.green
                                                               : Colors.red;
                                                         }),
-                                                        trackColor: MaterialStateProperty.resolveWith<Color>((
-                                                          states,
-                                                        ) {
-                                                          final isDisabled =
-                                                              states.contains(
-                                                                MaterialState
-                                                                    .disabled,
-                                                              );
-
+                                                        trackColor: MaterialStateProperty
+                                                            .resolveWith<Color>((states) {
+                                                          final isDisabled = states
+                                                              .contains(MaterialState
+                                                                  .disabled);
                                                           if (isDisabled) {
                                                             return switchValue
-                                                                ? const Color(
-                                                                    0xffc6d8cd,
-                                                                  )
+                                                                ? const Color(0xffc6d8cd)
                                                                 : const Color(
-                                                                    0xffdbc7c4,
-                                                                  );
+                                                                    0xffdbc7c4);
                                                           }
-
                                                           return switchValue
                                                               ? Colors.green
-                                                                    .withOpacity(
-                                                                      0.45,
-                                                                    )
+                                                                  .withOpacity(0.45)
                                                               : Colors.red
-                                                                    .withOpacity(
-                                                                      0.45,
-                                                                    );
+                                                                  .withOpacity(0.45);
                                                         }),
-                                                      );
-                                                    }),
-                                                  ],
-                                                ),
-                                              );
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              });
                                             },
                                           );
                                         }),

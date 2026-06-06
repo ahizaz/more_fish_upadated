@@ -524,18 +524,26 @@ class _SwitchTile extends StatelessWidget {
     final bool canToggle =
         isOnline && (switchItem.isActive ?? false) && !automationEnabled;
 
+    final bool isOn = switchItem.isOn ?? false;
+
     return Container(
       width: w,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: canToggle ? Colors.white : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black12),
+        border: Border.all(
+          color: isOn ? Colors.green.withOpacity(0.5) : Colors.black12,
+          width: isOn ? 1.5 : 1,
+        ),
         boxShadow: [
           if (canToggle)
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
+              color: isOn 
+                ? Colors.green.withOpacity(0.2) 
+                : Colors.black.withValues(alpha: 0.05),
+              blurRadius: isOn ? 8 : 4,
+              spreadRadius: isOn ? 2 : 0,
               offset: const Offset(0, 2),
             ),
         ],

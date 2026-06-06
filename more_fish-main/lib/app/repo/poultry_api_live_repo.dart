@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import '../service/service.dart';
 import '../service/local_storage.dart';
@@ -209,12 +210,13 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
     final ts = _firstNonEmpty([
       _string(_sensorValueByName(sensors, 'temperature', field: 'data_time')),
       _string(_sensorValueByName(sensors, 'humidity', field: 'data_time')),
-      DateTime.now().toUtc().toIso8601String(),
+      DateFormat('dd MMM yyyy hh:mm a').format(DateTime.now()),
     ]);
 
     return PoultryLiveData(
       deviceId: resolvedDeviceId.isEmpty ? selectedDeviceId : resolvedDeviceId,
       deviceStatus: _string(device['device_status']),
+      isOnline: device['is_online'] == true,
       timestamp: ts,
       aqi: _double(values['aqi']),
       nh3MgL: _double(values['nh3_gas']),
@@ -275,7 +277,7 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
   String _metricTitle(String normalizedName) {
     switch (normalizedName) {
       case 'aqi':
-        return 'Air Quality Index (AQI)';
+        return 'AQI';
       case 'nh3_gas':
         return 'Ammonia (NH3)';
       case 'co2':
@@ -288,6 +290,14 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
         return 'Methane (CH4)';
       case 'light_intensity':
         return 'Light intensity';
+      case 'pm1_0':
+        return 'PM 1.0';
+      case 'pm2_5':
+        return 'PM 2.5';
+      case 'pm4_0':
+        return 'PM 4.0';
+      case 'pm10':
+        return 'PM 10';
       default:
         return normalizedName
             .split('_')

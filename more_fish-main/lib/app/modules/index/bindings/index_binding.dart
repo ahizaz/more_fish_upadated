@@ -5,10 +5,12 @@ import '../../more/controllers/more_controller.dart';
 import '../../notifications/controllers/notifications_controller.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../controllers/index_controller.dart';
+import '../../cattle_index/controllers/cattle_header_controller.dart';
 
 class IndexBinding extends Bindings {
   @override
   void dependencies() {
+    Get.lazyPut<CattleHeaderController>(() => CattleHeaderController());
     Get.lazyPut<IndexController>(
       () => IndexController(),
     );
