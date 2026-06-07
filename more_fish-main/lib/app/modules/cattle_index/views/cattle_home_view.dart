@@ -43,7 +43,7 @@ class CattleHomeView extends GetView<CattleIndexController> {
                       controller.checkLogin();
                       if (result == true) {
                         if (index == 0) {
-                          Get.to(() => const CattleLiveMonitoringView());
+                          Get.to(() => const CattleLiveMonitoringView(), routeName: '/cattle-live-monitoring');
                         } else {
                           Get.toNamed(Routes.COMING_SOON);
                         }
@@ -54,7 +54,7 @@ class CattleHomeView extends GetView<CattleIndexController> {
               );
             } else {
               if (index == 0) {
-                Get.to(() => const CattleLiveMonitoringView());
+                Get.to(() => const CattleLiveMonitoringView(), routeName: '/cattle-live-monitoring');
               } else {
                 Get.toNamed(Routes.COMING_SOON);
               }

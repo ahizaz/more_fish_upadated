@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import '../../../routes/app_pages.dart';
 import '../../../repo/cattle_live_repo.dart';
 import '../../../response/cattle_farm_list_response.dart';
 import '../../../response/cattle_farrm_dashboard_response.dart';
@@ -21,6 +23,7 @@ class CattleLiveMonitoringController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    debugPrint('CattleMonitoringController: onInit');
     fetchFarmList();
     _startBackgroundRefresh();
   }
@@ -34,60 +37,84 @@ class CattleLiveMonitoringController extends GetxController {
   void _startBackgroundRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      // Only refresh if Cattle screen is active
-      if (selectedDeviceId.value.isNotEmpty && Get.currentRoute.toLowerCase().contains('cattle')) {
+      final route = Get.currentRoute.toLowerCase();
+      if (selectedDeviceId.value.isNotEmpty && route.contains('cattle')) {
         refreshLiveData(showLoader: false);
       }
     });
   }
 
   Future<void> fetchFarmList() async {
-    if (cattleFarmListResponse.value == null) {
-      isLoading.value = true;
-    }
+    debugPrint('CattleMonitoring: fetchFarmList() start');
+    isLoading.value = true;
     error.value = '';
-    var response = await cattleLiveDataRepository.getFarmList();
-    response.fold(
-      (l) {
-        isLoading.value = false;
-        error.value = l.message;
-      },
-      (r) {
-        cattleFarmListResponse.value = r;
-        if (r.data != null && r.data!.isNotEmpty) {
-          final firstFarmId = r.data![0].id.toString();
-          selectedDeviceId.value = firstFarmId;
-          fetchFarmDashboard(id: firstFarmId);
-        } else {
+
+    try {
+      final response = await cattleLiveDataRepository.getFarmList();
+      await response.fold(
+        (l) async {
+          debugPrint('CattleMonitoring: fetchFarmList() error: ${l.message}');
+          error.value = l.message;
           isLoading.value = false;
-        }
-      },
-    );
+        },
+        (r) async {
+          debugPrint(
+            'CattleMonitoring: fetchFarmList() success, found ${r.data?.length ?? 0} farms',
+          );
+          cattleFarmListResponse.value = r;
+          if (r.data != null && r.data!.isNotEmpty) {
+            final firstFarmId = r.data![0].id.toString();
+            selectedDeviceId.value = firstFarmId;
+            // fetchFarmDashboard will handle setting isLoading to false
+            await fetchFarmDashboard(id: firstFarmId, showLoader: true);
+          } else {
+            debugPrint('CattleMonitoring: No farms in list');
+            error.value = "No farms found for this account.";
+            isLoading.value = false;
+          }
+        },
+      );
+    } catch (e) {
+      debugPrint('CattleMonitoring: Exception in fetchFarmList: $e');
+      error.value = "Unexpected error: $e";
+      isLoading.value = false;
+    }
   }
 
   Future<void> fetchFarmDashboard({
     required String id,
     bool showLoader = true,
   }) async {
-    if (showLoader && cattleFarmDashboardResponse.value == null) {
+    debugPrint('CattleMonitoring: fetchFarmDashboard(id: $id) start');
+    if (showLoader) {
       isLoading.value = true;
     }
     error.value = '';
-    var response = await cattleLiveDataRepository.getFarmDashboard(id: id);
-    response.fold(
-      (l) {
-        error.value = l.message;
-      },
-      (r) {
-        cattleFarmDashboardResponse.value = r;
-        if (Get.isRegistered<CattleHeaderController>()) {
-          Get.find<CattleHeaderController>().updateFromDashboard(
-            r.data?.weather,
-          );
-        }
-      },
-    );
-    isLoading.value = false;
+
+    try {
+      final response = await cattleLiveDataRepository.getFarmDashboard(id: id);
+      response.fold(
+        (l) {
+          debugPrint('CattleMonitoring: fetchFarmDashboard() error: ${l.message}');
+          error.value = l.message;
+        },
+        (r) {
+          debugPrint('CattleMonitoring: fetchFarmDashboard() success');
+          cattleFarmDashboardResponse.value = r;
+          if (Get.isRegistered<CattleHeaderController>()) {
+            Get.find<CattleHeaderController>().updateFromDashboard(
+              r.data?.weather,
+            );
+          }
+        },
+      );
+    } catch (e) {
+      debugPrint('CattleMonitoring: Exception in fetchFarmDashboard: $e');
+      error.value = "Failed to load dashboard: $e";
+    } finally {
+      isLoading.value = false;
+      debugPrint('CattleMonitoring: fetchFarmDashboard() finished');
+    }
   }
 
   Future<void> onDeviceChanged(String id) async {
@@ -103,7 +130,6 @@ class CattleLiveMonitoringController extends GetxController {
         showLoader: showLoader,
       );
     } else {
-      // ✅ If we don't have a device yet (maybe initial load failed), try farm list again
       await fetchFarmList();
     }
   }
@@ -133,5 +159,50 @@ class CattleLiveMonitoringController extends GetxController {
     } catch (_) {
       return null;
     }
+  }
+
+  void openSensorGraph(Sensor sensor) {
+    final farmId = int.tryParse(selectedDeviceId.value.trim());
+
+    if (farmId == null) {
+      Get.snackbar(
+        'Error',
+        'Invalid farm selected',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    String displayName = sensor.name ?? 'Sensor';
+    final n = displayName.toLowerCase();
+    if (n == 'temperature') {
+      displayName = 'Temperature';
+    } else if (n == 'humidity') {
+      displayName = 'Humidity';
+    } else if (n == 'nh3_gas') {
+      displayName = 'Ammonia (NH3)';
+    } else if (n == 'tvoc') {
+      displayName = 'TVOC';
+    } else if (n == 'co2') {
+      displayName = 'Carbon dioxide';
+    } else if (n == 'pm2_5') {
+      displayName = 'PM 2.5';
+    } else if (n == 'pm1_0') {
+      displayName = 'PM 1.0';
+    } else if (n == 'methane_ppm') {
+      displayName = 'Methane (CH4)';
+    }
+
+    Get.toNamed(
+      Routes.GRAPH,
+      arguments: {
+        'flow': 'cattle',
+        'farmId': farmId,
+        'sensorKey': sensor.name,
+        'sensorName': displayName,
+        'unit': sensor.unit,
+        'type': 'daily',
+      },
+    );
   }
 }

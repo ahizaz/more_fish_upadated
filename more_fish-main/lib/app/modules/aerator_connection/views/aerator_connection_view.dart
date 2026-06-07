@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../common_widgets/common_app_bar.dart';
+import '../../../common_widgets/common_switch.dart';
 
 import '../../../common_widgets/common_container.dart';
 import '../../../common_widgets/common_text.dart';
@@ -127,12 +128,11 @@ class _AeratorStatusCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Switch(
+              CommonSwitch(
                 value: isOnline,
                 onChanged: null,
                 activeColor: Colors.green,
-                inactiveThumbColor: Colors.red,
-                inactiveTrackColor: Colors.grey,
+                inactiveColor: Colors.red,
               ),
               CommonText(
                 isOnline ? 'Online' : 'Offline',

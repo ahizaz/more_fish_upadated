@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../common_widgets/common_app_bar.dart';
+import '../../../common_widgets/common_switch.dart';
 import '../../../repo/poultry_live_models.dart';
 import '../controllers/poultry_live_monitoring_controller.dart';
 import '../controllers/poultry_header_controller.dart';
@@ -475,9 +476,10 @@ class _SwitchCard extends StatelessWidget {
                 ),
               ),
             ),
-            Switch(
+            CommonSwitch(
               value: value,
-              activeColor: isDeviceOnline ? null : Colors.grey,
+              activeColor: Colors.green,
+              inactiveColor: Colors.red,
               onChanged: !canInteract
                   ? null
                   : (v) {

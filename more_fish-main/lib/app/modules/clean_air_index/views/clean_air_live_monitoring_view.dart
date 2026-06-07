@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../common_widgets/common_app_bar.dart';
 import '../../../common_widgets/common_container.dart';
 import '../../../common_widgets/common_text.dart';
+import '../../../common_widgets/common_switch.dart';
 import '../../../routes/app_pages.dart';
 import '../../../service/service.dart';
 import '../controllers/clean_air_header_controller.dart';
@@ -615,10 +616,7 @@ class CleanAirLiveMonitoringView
                                                           ),
                                                         ],
                                                       ),
-                                                      Switch(
-                                                        key: ValueKey(
-                                                          aerator.aeratorPk,
-                                                        ),
+                                                      CommonSwitch(
                                                         value: switchValue,
                                                         onChanged: !isOnline ||
                                                                 controller.isAeratorBusy(
@@ -635,38 +633,8 @@ class CleanAirLiveMonitoringView
                                                                       aerator.aeratorPk,
                                                                 );
                                                               },
-                                                        thumbColor: MaterialStateProperty
-                                                            .resolveWith<Color>((states) {
-                                                          final isDisabled = states
-                                                              .contains(MaterialState
-                                                                  .disabled);
-                                                          if (isDisabled) {
-                                                            return switchValue
-                                                                ? const Color(0xff93b39f)
-                                                                : const Color(
-                                                                    0xffb59a97);
-                                                          }
-                                                          return switchValue
-                                                              ? Colors.green
-                                                              : Colors.red;
-                                                        }),
-                                                        trackColor: MaterialStateProperty
-                                                            .resolveWith<Color>((states) {
-                                                          final isDisabled = states
-                                                              .contains(MaterialState
-                                                                  .disabled);
-                                                          if (isDisabled) {
-                                                            return switchValue
-                                                                ? const Color(0xffc6d8cd)
-                                                                : const Color(
-                                                                    0xffdbc7c4);
-                                                          }
-                                                          return switchValue
-                                                              ? Colors.green
-                                                                  .withOpacity(0.45)
-                                                              : Colors.red
-                                                                  .withOpacity(0.45);
-                                                        }),
+                                                        activeColor: Colors.green,
+                                                        inactiveColor: Colors.red,
                                                       ),
                                                     ],
                                                   ),

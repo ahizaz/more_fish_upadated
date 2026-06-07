@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../common_widgets/common_app_bar.dart';
+import '../../../common_widgets/common_switch.dart';
 
 import '../../../common_widgets/common_text.dart';
 import '../../../res/colors/colors.dart';

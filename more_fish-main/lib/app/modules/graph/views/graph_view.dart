@@ -16,10 +16,10 @@ class GraphView extends GetView<GraphController> {
 
   double _computePadding(double minValue, double maxValue) {
     final range = (maxValue - minValue).abs();
-    if (range < 0.001) {
-      return 1.0;
+    if (range < 1.0) {
+      return 0.5;
     }
-    return (range * 0.1).clamp(0.2, range).toDouble();
+    return range * 0.1;
   }
 
   double _computeYAxisInterval(
@@ -54,6 +54,7 @@ class GraphView extends GetView<GraphController> {
   }
 
   String _formatYAxisValue(double value, {required bool isMonthly}) {
+    if (value.isNaN || value.isInfinite) return '0';
     final absValue = value.abs();
 
     if (absValue >= 1000000) {
@@ -74,15 +75,24 @@ class GraphView extends GetView<GraphController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backGround,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        elevation: 0,
         backgroundColor: const Color(0xffd4fcfd),
         title: Text(
           controller.graphTitle,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+          onPressed: () => Get.back(),
         ),
         actions: [
-          // Popup menu in the AppBar for selecting period (Daily/Weekly/Monthly/Yearly)
           Obx(
             () => PopupMenuButton<String>(
               initialValue: controller.selectedPeriod.value,
@@ -97,22 +107,29 @@ class GraphView extends GetView<GraphController> {
                 PopupMenuItem(value: 'Yearly', child: Text('Yearly')),
               ],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: Center(
-                  child: Text(
-                    _periodLabel(controller.selectedPeriod.value),
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Text(
+                      _periodLabel(controller.selectedPeriod.value),
+                      style: const TextStyle(
+                        color: Colors.blueAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
+                    const Icon(
+                      Icons.arrow_drop_down,
+                      color: Colors.blueAccent,
+                      size: 20,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ],
       ),
-
       body: Obx(() {
         if (controller.isLoading.value && !controller.hasLoaded.value) {
           return const Center(child: CircularProgressIndicator());
@@ -122,14 +139,57 @@ class GraphView extends GetView<GraphController> {
             controller.sensorValues.isEmpty) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(controller.error.value, textAlign: TextAlign.center),
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.cloud_off_rounded,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    controller.error.value.contains('TimeoutException')
+                        ? 'The server is taking too long to respond. Please check your connection and try again.'
+                        : controller.error.value,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => controller.graphData(),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Try Again'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
 
         if (controller.sensorValues.isEmpty) {
-          return const Center(child: Text('No graph data available'));
+          return const Center(
+            child: Text(
+              'No graph data available',
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          );
         }
 
         final sensorValues = controller.sensorValues;
@@ -152,141 +212,270 @@ class GraphView extends GetView<GraphController> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Dropdown for Daily / Weekly / Monthly / Yearly
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  DropdownButton<String>(
-                    value: controller.selectedPeriod.value,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Daily',
-                        child: Text('Last 24 H'),
+              // Period Selector Card
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Time Period",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      DropdownMenuItem(value: 'Weekly', child: Text('Weekly')),
-                      DropdownMenuItem(
-                        value: 'Monthly',
-                        child: Text('Monthly'),
+                      DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: controller.selectedPeriod.value,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'Daily',
+                              child: Text('Last 24 H'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Weekly',
+                              child: Text('Weekly'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Monthly',
+                              child: Text('Monthly'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Yearly',
+                              child: Text('Yearly'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              controller.selectedPeriod.value = value;
+                              controller.graphData(type: value.toLowerCase());
+                            }
+                          },
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.blueAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          dropdownColor: Colors.white,
+                        ),
                       ),
-                      DropdownMenuItem(value: 'Yearly', child: Text('Yearly')),
                     ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        controller.selectedPeriod.value = value;
-                        controller.graphData(
-                          type: value.toLowerCase(),
-                        ); // fetch new data
-                      }
-                    },
-                    underline: Container(),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    dropdownColor: Colors.white,
                   ),
-                ],
+                ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               // Graph Section
               Expanded(
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(
-                      show: true,
-                      horizontalInterval: yInterval,
-                      getDrawingHorizontalLine: (value) => FlLine(
-                        color: Colors.grey.withOpacity(0.3),
-                        strokeWidth: 1,
-                      ),
-                      getDrawingVerticalLine: (value) => FlLine(
-                        color: Colors.grey.withOpacity(0.3),
-                        strokeWidth: 1,
-                      ),
-                    ),
-                    titlesData: FlTitlesData(
-                      topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-
-                      //  X-axis
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 50,
-                          interval: (isWeekly || isYearly)
-                              ? 1
-                              : (sensorValues.length / 5).floorToDouble().clamp(
-                                  1,
-                                  10,
-                                ),
-                          getTitlesWidget: (value, meta) {
-                            int index = value.toInt();
-                            if (index >= 0 && index < timeLabels.length) {
-                              final label = timeLabels[index].trim();
-                              if (label.isEmpty) {
-                                return const SizedBox.shrink();
-                              }
-                              return Transform.rotate(
-                                angle: -0.7,
-                                child: Text(
-                                  label,
-                                  style: const TextStyle(fontSize: 9),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      ),
-
-                      // Y-axis
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: (isMonthly || isYearly) ? 56 : 48,
-                          interval: yInterval,
-                          getTitlesWidget: (value, meta) {
-                            return SideTitleWidget(
-                              axisSide: meta.axisSide,
-                              space: 6,
-                              child: Text(
-                                _formatYAxisValue(
-                                  value,
-                                  isMonthly: isMonthly || isYearly,
-                                ),
-                                style: const TextStyle(fontSize: 10),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(
-                      show: true,
-                      border: Border.all(color: Colors.black, width: 1),
-                    ),
-                    minY: minY,
-                    maxY: maxY,
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: List.generate(
-                          sensorValues.length,
-                          (i) => FlSpot(i.toDouble(), sensorValues[i]),
-                        ),
-                        isCurved: false,
-                        color: Colors.blueAccent,
-                        barWidth: 2,
-                        dotData: const FlDotData(show: true),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(10, 24, 20, 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
+                  child: LineChart(
+                    LineChartData(
+                      lineTouchData: LineTouchData(
+                      handleBuiltInTouches: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (touchedSpot) =>
+                            AppColors.primary.withOpacity(0.9),
+                        tooltipRoundedRadius: 8,
+                        getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                          return touchedSpots.map((LineBarSpot touchedSpot) {
+                            return LineTooltipItem(
+                              touchedSpot.y.toStringAsFixed(2),
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                      getTouchedSpotIndicator:
+                          (LineChartBarData barData, List<int> spotIndexes) {
+                        return spotIndexes.map((spotIndex) {
+                          return TouchedSpotIndicatorData(
+                            FlLine(
+                              color: AppColors.primary.withOpacity(0.5),
+                              strokeWidth: 2,
+                              dashArray: [5, 5],
+                            ),
+                            FlDotData(
+                              getDotPainter: (spot, percent, barData, index) {
+                                return FlDotCirclePainter(
+                                  radius: 6,
+                                  color: AppColors.primary,
+                                  strokeWidth: 2,
+                                  strokeColor: Colors.white,
+                                );
+                              },
+                            ),
+                          );
+                        }).toList();
+                      },
+                    ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: true,
+                        horizontalInterval: yInterval,
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: Colors.grey.withOpacity(0.1),
+                          strokeWidth: 1,
+                        ),
+                        getDrawingVerticalLine: (value) => FlLine(
+                          color: Colors.grey.withOpacity(0.1),
+                          strokeWidth: 1,
+                        ),
+                      ),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 40,
+                            interval: (isWeekly || isYearly)
+                                ? 1
+                                : (sensorValues.length / 5)
+                                    .floorToDouble()
+                                    .clamp(1, 10),
+                            getTitlesWidget: (value, meta) {
+                              int index = value.toInt();
+                              if (index >= 0 && index < timeLabels.length) {
+                                final label = timeLabels[index].trim();
+                                if (label.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  space: 8,
+                                  child: Transform.rotate(
+                                    angle: -0.5,
+                                    child: Text(
+                                      label,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.grey.shade600,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: (isMonthly || isYearly) ? 56 : 48,
+                            interval: yInterval,
+                            getTitlesWidget: (value, meta) {
+                              return SideTitleWidget(
+                                axisSide: meta.axisSide,
+                                space: 8,
+                                child: Text(
+                                  _formatYAxisValue(
+                                    value,
+                                    isMonthly: isMonthly || isYearly,
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Colors.grey.withOpacity(0.2),
+                            width: 1,
+                          ),
+                          left: BorderSide(
+                            color: Colors.grey.withOpacity(0.2),
+                            width: 1,
+                          ),
+                          right: const BorderSide(color: Colors.transparent),
+                          top: const BorderSide(color: Colors.transparent),
+                        ),
+                      ),
+                      minY: minY,
+                      maxY: maxY,
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: List.generate(
+                            sensorValues.length,
+                            (i) => FlSpot(i.toDouble(), sensorValues[i]),
+                          ),
+                          isCurved: true,
+                          curveSmoothness: 0.35,
+                          color: AppColors.primary,
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: FlDotData(
+                            show: sensorValues.length < 30,
+                            getDotPainter: (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                              radius: 3,
+                              color: Colors.white,
+                              strokeWidth: 2,
+                              strokeColor: AppColors.primary,
+                            ),
+                          ),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primary.withOpacity(0.3),
+                                AppColors.primary.withOpacity(0.0),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Hint text
+              Text(
+                "Tip: Long press on the graph to see exact values",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
             ],

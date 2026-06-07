@@ -261,7 +261,7 @@ class DevicesRepository {
           try {
             res = await client
                 .get(uri, headers: headers)
-                .timeout(const Duration(seconds: 8));
+                .timeout(const Duration(seconds: 20));
             break;
           } on SocketException catch (e) {
             debugPrint('Graph request socket error (attempt $attempt): $e');

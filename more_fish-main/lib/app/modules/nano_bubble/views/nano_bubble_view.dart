@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import '../../../common_widgets/common_app_bar.dart';
+import '../../../common_widgets/common_switch.dart';
 import '../../../common_widgets/common_container.dart';
 import '../../../common_widgets/common_text.dart';
 import '../../home/controllers/home_controller.dart';
@@ -172,10 +173,12 @@ class NanoBubbleView extends GetView<WaterQualityDeviceController> {
                                       fallback: aerator.isRunning == true,
                                     );
 
-                                    return Switch(
-                                      key: ValueKey(aerator.aeratorPk),
+                                    return CommonSwitch(
                                       value: switchValue,
-                                      onChanged: !isOnline || controller.isAeratorBusy(aerator.aeratorPk)
+                                      onChanged: !isOnline ||
+                                              controller.isAeratorBusy(
+                                                aerator.aeratorPk,
+                                              )
                                           ? null
                                           : (bool value) {
                                               controller.aeratorCommand(
@@ -186,20 +189,8 @@ class NanoBubbleView extends GetView<WaterQualityDeviceController> {
                                                 aeratorPk: aerator.aeratorPk,
                                               );
                                             },
-                                      thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
-                                        final isDisabled = states.contains(MaterialState.disabled);
-                                        if (isDisabled) {
-                                          return switchValue ? const Color(0xff93b39f) : const Color(0xffb59a97);
-                                        }
-                                        return switchValue ? Colors.green : Colors.red;
-                                      }),
-                                      trackColor: MaterialStateProperty.resolveWith<Color>((states) {
-                                        final isDisabled = states.contains(MaterialState.disabled);
-                                        if (isDisabled) {
-                                          return switchValue ? const Color(0xffc6d8cd) : const Color(0xffdbc7c4);
-                                        }
-                                        return switchValue ? Colors.green.withOpacity(0.45) : Colors.red.withOpacity(0.45);
-                                      }),
+                                      activeColor: Colors.green,
+                                      inactiveColor: Colors.red,
                                     );
                                   }),
                                 ],

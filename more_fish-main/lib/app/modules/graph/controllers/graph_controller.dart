@@ -28,12 +28,13 @@ class GraphController extends GetxController {
   String sensorName = '';
   String sensorUnit = '';
   bool isPoultryFlow = false;
+  bool isCattleFlow = false;
   bool isPharmaFlow = false;
 
   var selectedPeriod = 'Daily'.obs;
 
   String get graphTitle {
-    if (isPoultryFlow) {
+    if (isPoultryFlow || isCattleFlow) {
       if (sensorName.trim().isNotEmpty) {
         return sensorName;
       }
@@ -43,12 +44,13 @@ class GraphController extends GetxController {
       return 'Graph';
     }
 
-    if (sensorId == 1) return 'pH';
-    if (sensorId == 2) return 'Temperature';
-    if (sensorId == 3) return 'DO';
-    if (sensorId == 4) return 'TDS';
-    if (sensorId == 5) return 'NH3';
-    if (sensorId == 6) return 'Salinity';
+    final id = sensorId?.toString();
+    if (id == '1') return 'pH';
+    if (id == '2') return 'Temperature';
+    if (id == '3') return 'DO';
+    if (id == '4') return 'TDS';
+    if (id == '5') return 'NH3';
+    if (id == '6') return 'Salinity';
     return 'Graph';
   }
 
@@ -73,6 +75,8 @@ class GraphController extends GetxController {
     try {
       if (isPoultryFlow) {
         await _loadPoultryGraph(type: requestedType);
+      } else if (isCattleFlow) {
+        await _loadCattleGraph(type: requestedType);
       } else {
         await _loadDefaultGraph(type: requestedType);
       }
@@ -95,9 +99,10 @@ class GraphController extends GetxController {
     final map = Map<String, dynamic>.from(args);
     final flow = map['flow']?.toString().toLowerCase();
     isPoultryFlow = flow == 'poultry';
+    isCattleFlow = flow == 'cattle';
     isPharmaFlow = flow == 'pharma';
 
-    if (isPoultryFlow) {
+    if (isPoultryFlow || isCattleFlow) {
       farmId = int.tryParse('${map['farmId']}');
       sensorKey = (map['sensorKey'] ?? '').toString().trim();
       sensorName = (map['sensorName'] ?? '').toString().trim();
@@ -172,28 +177,67 @@ class GraphController extends GetxController {
       '${ApiService.poultryBaseUrl}/poultry_care/data/graph/?farm_id=$farmId&sensor_key=$sensorKey&type=$type',
     );
 
-    debugPrint('Poultry graph GET: $uri');
+    await _fetchGraphAndApply(uri, token, 'Poultry');
+  }
 
-    final response = await http.get(
-      uri,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    debugPrint('Poultry graph status: ${response.statusCode}');
-    debugPrint('Poultry graph body: ${response.body}');
-
-    if (response.statusCode != 200) {
-      throw Exception(
-        'Poultry graph API failed with status ${response.statusCode}',
-      );
+  Future<void> _loadCattleGraph({required String type}) async {
+    if (farmId == null || sensorKey.isEmpty) {
+      throw Exception('Missing farm_id or sensor_key for cattle graph.');
     }
 
-    final parsed = GraphResponse.fromRawJson(response.body);
-    graphResponse.value = parsed;
-    _applyChartData(parsed);
+    final token = _getCattleToken();
+    final uri = Uri.parse(
+      '${ApiService.baseUrl}/cattle_care/data/graph/?farm_id=$farmId&sensor_key=$sensorKey&type=$type',
+    );
+
+    await _fetchGraphAndApply(uri, token, 'Cattle');
+  }
+
+  Future<void> _fetchGraphAndApply(Uri uri, String token, String flowName) async {
+    debugPrint('$flowName graph GET: $uri');
+
+    final client = http.Client();
+    try {
+      const int maxAttempts = 2;
+      int attempt = 0;
+      http.Response? response;
+
+      while (attempt < maxAttempts) {
+        attempt++;
+        try {
+          response = await client.get(
+            uri,
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          ).timeout(const Duration(seconds: 20));
+          break;
+        } catch (e) {
+          debugPrint('$flowName graph request error (attempt $attempt): $e');
+          if (attempt >= maxAttempts) rethrow;
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+      }
+
+      if (response == null) {
+        throw Exception('No response from $flowName graph API');
+      }
+
+      debugPrint('$flowName graph status: ${response.statusCode}');
+      if (response.statusCode != 200) {
+        debugPrint('$flowName graph error body: ${response.body}');
+        throw Exception(
+          '$flowName graph API failed with status ${response.statusCode}',
+        );
+      }
+
+      final parsed = GraphResponse.fromRawJson(response.body);
+      graphResponse.value = parsed;
+      _applyChartData(parsed);
+    } finally {
+      client.close();
+    }
   }
 
   String _getPoultryToken() {
@@ -205,6 +249,17 @@ class GraphController extends GetxController {
       }
     }
     return _fallbackPoultryToken;
+  }
+
+  String _getCattleToken() {
+    if (Get.isRegistered<LoginTokenStorage>()) {
+      final token = Get.find<LoginTokenStorage>().getCattleToken();
+      final normalized = token?.trim();
+      if (normalized != null && normalized.isNotEmpty) {
+        return normalized;
+      }
+    }
+    return _fallbackPoultryToken; // Using poultry fallback as a generic one if cattle fails
   }
 
   void _applyChartData(GraphResponse response) {
@@ -224,7 +279,7 @@ class GraphController extends GetxController {
         .toList();
     timeLabels.value = List<String>.from(time);
 
-    if (isPoultryFlow && sensorName.isEmpty) {
+    if ((isPoultryFlow || isCattleFlow) && sensorName.isEmpty) {
       sensorName = (firstItem.sensorName ?? '').toString();
     }
   }

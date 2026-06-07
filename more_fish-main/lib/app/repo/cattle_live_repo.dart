@@ -1,98 +1,113 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:dartz/dartz.dart';
 
 import '../response/cattle_farm_list_response.dart';
 import '../response/cattle_farrm_dashboard_response.dart';
-import '../service/local_storage.dart';
-import 'cattle_live_models.dart';
-import 'package:http/http.dart' as http;
-import 'package:dartz/dartz.dart';
+import '../response/cattle_notifications_response.dart';
 import '../service/failure.dart';
 import '../service/service.dart';
-
-import '../response/cattle_notifications_response.dart';
+import '../service/local_storage.dart';
+import 'cattle_live_models.dart';
 
 abstract class CattleLiveRepository {
   Future<List<CattleDevice>> getDevices();
   Future<CattleLiveData> getLatestLiveData({required String deviceId});
 }
 
-
-
-class CattleLiveDataRepository{
+class CattleLiveDataRepository {
+  static const Duration _timeout = Duration(seconds: 15);
 
   Future<Either<Failure, CattleFarmListResponse>> getFarmList() async {
-    var loginTokenStorage = Get.find<LoginTokenStorage>();
-    var token = loginTokenStorage.getCattleToken();
+    final storage = Get.find<LoginTokenStorage>();
+    final token = storage.getCattleToken();
+    final url = Uri.parse("${ApiService.baseUrl}/cattle_care/farms/list/");
+
+    debugPrint('Cattle GET FarmList: $url');
+
     try {
-      var request = http.Request('GET', Uri.parse("${ApiService.baseUrl}/cattle_care/farms/list/"));
-      var headers = {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      };
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(_timeout);
 
-      request.headers.addAll(headers);
-
-      http.StreamedResponse response = await request.send();
+      debugPrint('Cattle FarmList status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        var data = await response.stream.bytesToString();
-        CattleFarmListResponse cattleFarmListResponse = CattleFarmListResponse.fromRawJson(data);
-        return Right(cattleFarmListResponse);
+        return Right(CattleFarmListResponse.fromRawJson(response.body));
+      } else {
+        return Left(Failure('Server returned status: ${response.statusCode}'));
       }
-      else {
-        return Left(Failure('Failed to fetch cattle with status: ${response.statusCode}'));
-      }
+    } on SocketException {
+      return Left(Failure('No internet connection'));
+    } on TimeoutException {
+      return Left(Failure('Connection timed out'));
     } catch (e) {
       return Left(Failure('Error: $e'));
     }
   }
 
+  Future<Either<Failure, CattleFarmDashboardResponse>> getFarmDashboard({
+    required String id,
+  }) async {
+    final storage = Get.find<LoginTokenStorage>();
+    final token = storage.getCattleToken();
+    final url = Uri.parse(
+      "${ApiService.baseUrl}/cattle_care/farms/dashboard/?farm_id=$id",
+    );
 
-  Future<Either<Failure, CattleFarmDashboardResponse>> getFarmDashboard({id}) async {
-    var loginTokenStorage = Get.find<LoginTokenStorage>();
-    var token = loginTokenStorage.getCattleToken();
+    debugPrint('Cattle GET Dashboard: $url');
+
     try {
-      var request = http.Request('GET', Uri.parse("${ApiService.baseUrl}/cattle_care/farms/dashboard/?farm_id=$id"));
-      var headers = {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      };
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(_timeout);
 
-      request.headers.addAll(headers);
-
-      http.StreamedResponse response = await request.send();
+      debugPrint('Cattle Dashboard status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        var data = await response.stream.bytesToString();
-        CattleFarmDashboardResponse cattleFarmDashboardResponse = CattleFarmDashboardResponse.fromRawJson(data);
-        return Right(cattleFarmDashboardResponse);
+        return Right(CattleFarmDashboardResponse.fromRawJson(response.body));
+      } else {
+        return Left(Failure('Server returned status: ${response.statusCode}'));
       }
-      else {
-        return Left(Failure('Failed to fetch cattle with status: ${response.statusCode}'));
-      }
+    } on SocketException {
+      return Left(Failure('No internet connection'));
+    } on TimeoutException {
+      return Left(Failure('Connection timed out'));
     } catch (e) {
       return Left(Failure('Error: $e'));
     }
   }
 
   Future<Either<Failure, CattleNotificationsResponse>> getNotifications() async {
-    var loginTokenStorage = Get.find<LoginTokenStorage>();
-    var token = loginTokenStorage.getCattleToken();
+    final storage = Get.find<LoginTokenStorage>();
+    final token = storage.getCattleToken();
+    final url = Uri.parse("${ApiService.baseUrl}/cattle_care/notifications/");
+
     try {
       final response = await http.get(
-        Uri.parse("${ApiService.baseUrl}/cattle_care/notifications/"),
+        url,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-      );
+      ).timeout(_timeout);
 
       if (response.statusCode == 200) {
         return Right(CattleNotificationsResponse.fromRawJson(response.body));
       } else {
-        return Left(Failure('Failed to fetch notifications with status: ${response.statusCode}'));
+        return Left(Failure('Server error: ${response.statusCode}'));
       }
     } catch (e) {
       return Left(Failure('Error: $e'));
@@ -103,21 +118,21 @@ class CattleLiveDataRepository{
     required String switchId,
     required bool turnOn,
   }) async {
-    var loginTokenStorage = Get.find<LoginTokenStorage>();
-    var token = loginTokenStorage.getCattleToken();
+    final storage = Get.find<LoginTokenStorage>();
+    final token = storage.getCattleToken();
+    final url = Uri.parse(
+      "${ApiService.baseUrl}/cattle_care/switches/command/",
+    );
+
     try {
-      final url = Uri.parse("${ApiService.baseUrl}/cattle_care/switches/command/");
       final response = await http.post(
         url,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          'switch_id': switchId,
-          'command': turnOn ? 1 : 0,
-        }),
-      );
+        body: jsonEncode({'switch_id': switchId, 'command': turnOn ? 1 : 0}),
+      ).timeout(_timeout);
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -127,13 +142,10 @@ class CattleLiveDataRepository{
           return Left(Failure(decoded['message'] ?? 'Switch command failed'));
         }
       } else {
-        return Left(Failure('Failed with status: ${response.statusCode}'));
+        return Left(Failure('Server error: ${response.statusCode}'));
       }
     } catch (e) {
       return Left(Failure('Error: $e'));
     }
   }
-
-
-
 }

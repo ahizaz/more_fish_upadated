@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/cattle_live_monitoring_controller.dart';
 import '../controllers/cattle_header_controller.dart';
+import '../../../common_widgets/common_switch.dart';
 import '../../../response/cattle_farrm_dashboard_response.dart' as resp;
 
 import 'package:intl/intl.dart';
@@ -27,11 +28,57 @@ class CattleLiveMonitoringView extends StatelessWidget {
           children: [
             _CattleCareHeader(header: header),
             Expanded(
-              child: GetBuilder<CattleLiveMonitoringController>(
-                builder: (controller) {
-                  return _LoggedInDashboard(controller: controller);
-                },
-              ),
+              child: Obx(() {
+                if (ctrl.isLoading.value &&
+                    ctrl.cattleFarmDashboardResponse.value == null) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (ctrl.error.value.isNotEmpty &&
+                    ctrl.cattleFarmDashboardResponse.value == null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            size: 64,
+                            color: Colors.redAccent,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            ctrl.error.value,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () => ctrl.fetchFarmList(),
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Try Again'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return _LoggedInDashboard(controller: ctrl);
+              }),
             ),
           ],
         ),
@@ -198,26 +245,6 @@ class _LoggedInDashboard extends StatelessWidget {
     return Obx(() {
       final dashboard = controller.cattleFarmDashboardResponse.value?.data;
 
-      if (controller.isLoading.value && dashboard == null) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (controller.error.value.isNotEmpty && dashboard == null) {
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Failed to load: ${controller.error.value}'),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: controller.fetchFarmList,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        );
-      }
-
       return RefreshIndicator(
         onRefresh: () => controller.refreshLiveData(),
         child: SingleChildScrollView(
@@ -230,7 +257,7 @@ class _LoggedInDashboard extends StatelessWidget {
                 const SizedBox(height: 10),
                 _DeviceDropdown(controller: controller),
                 const SizedBox(height: 10),
-                if (dashboard?.device != null)
+                if (dashboard?.device != null) ...[
                   _DeviceHeader(
                     deviceName: dashboard!.device!.deviceName ?? '--',
                     deviceStatus: dashboard.device!.deviceStatus ?? 'Offline',
@@ -238,20 +265,35 @@ class _LoggedInDashboard extends StatelessWidget {
                         ? dashboard.device!.sensors!.first.dataTime ?? '--'
                         : '--',
                   ),
-                const SizedBox(height: 10),
-                if (dashboard?.device?.sensors != null)
+                  const SizedBox(height: 10),
+                ],
+                if (dashboard?.device?.sensors != null &&
+                    dashboard!.device!.sensors!.isNotEmpty)
                   Wrap(
                     spacing: 12,
                     runSpacing: 12,
-                    children: dashboard!.device!.sensors!.map((sensor) {
-                      return _MetricCard(
-                        iconAsset: _getSensorIcon(sensor.name),
-                        title: _getSensorDisplayName(sensor.name),
-                        value: '${sensor.lastValue} ${sensor.unit}',
-                        isDanger:
-                            sensor.dangerStatus?.toLowerCase() == 'danger',
+                    children: dashboard.device!.sensors!.map((sensor) {
+                      return InkWell(
+                        onTap: () => controller.openSensorGraph(sensor),
+                        child: _MetricCard(
+                          iconAsset: _getSensorIcon(sensor.name),
+                          title: _getSensorDisplayName(sensor.name),
+                          value: '${sensor.lastValue} ${sensor.unit}',
+                          isDanger:
+                              sensor.dangerStatus?.toLowerCase() == 'danger',
+                        ),
                       );
                     }).toList(),
+                  )
+                else if (dashboard != null)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: Text(
+                        'No sensors found for this device.',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    ),
                   ),
                 const SizedBox(height: 20),
                 if (dashboard?.device?.switches != null &&
@@ -292,28 +334,32 @@ class _LoggedInDashboard extends StatelessWidget {
                     }).toList(),
                   ),
                 ],
-                const SizedBox(height: 14),
+                const SizedBox(height: 24),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 255, 254, 254),
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.blueGrey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blueGrey.shade100),
                   ),
-                  child: const Text(
-                    'Note: The parameters are changeable according to installation of device.',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                    textAlign: TextAlign.center,
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blueGrey),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Note: The parameters are changeable according to installation of device.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blueGrey,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 10),
-                if (controller.error.value.isNotEmpty)
-                  Text(
-                    'Last error: ${controller.error.value}',
-                    style: const TextStyle(color: Colors.redAccent),
-                  ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -469,7 +515,7 @@ class _MetricCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withOpacity(0.08),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -539,9 +585,9 @@ class _SwitchTile extends StatelessWidget {
         boxShadow: [
           if (canToggle)
             BoxShadow(
-              color: isOn 
-                ? Colors.green.withOpacity(0.2) 
-                : Colors.black.withValues(alpha: 0.05),
+              color: isOn
+                  ? Colors.green.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.05),
               blurRadius: isOn ? 8 : 4,
               spreadRadius: isOn ? 2 : 0,
               offset: const Offset(0, 2),
@@ -572,12 +618,12 @@ class _SwitchTile extends StatelessWidget {
                 ),
               ),
             ),
-          const SizedBox(height: 4),
-          Switch(
+          const SizedBox(height: 8),
+          CommonSwitch(
             value: switchItem.isOn ?? false,
             onChanged: canToggle ? onChanged : null,
-            activeTrackColor: Colors.green.shade200,
             activeColor: Colors.green,
+            inactiveColor: Colors.red,
           ),
         ],
       ),
