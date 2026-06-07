@@ -89,8 +89,14 @@ class GraphView extends GetView<GraphController> {
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
-          onPressed: () => Get.back(),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Get.back();
+            }
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
         ),
         actions: [
           Obx(

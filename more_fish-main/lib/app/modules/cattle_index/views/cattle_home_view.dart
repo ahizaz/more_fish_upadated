@@ -13,13 +13,13 @@ class CattleHomeView extends GetView<CattleIndexController> {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 16.0),
       itemCount: controller.listItemsEnglish1.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12.0,
-        mainAxisSpacing: 12.0,
-        childAspectRatio: 1,
+        crossAxisCount: 3,
+        crossAxisSpacing: 14.0,
+        mainAxisSpacing: 16.0,
+        childAspectRatio: 0.78,
       ),
       itemBuilder: (context, index) {
         return InkWell(
@@ -61,21 +61,30 @@ class CattleHomeView extends GetView<CattleIndexController> {
             }
           },
           child: CommonContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.all(8),
             alignment: Alignment.center,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(controller.iconList1[index], height: 70, width: 70),
-                const SizedBox(height: 6),
+                SizedBox(
+                  height: 50,
+                  width: 50,
+                  child: Image.asset(
+                    controller.iconList1[index],
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Text(
                   controller.listItemsEnglish1[index].tr,
                   style: const TextStyle(
                     color: Colors.black,
-                    fontSize: 16,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
