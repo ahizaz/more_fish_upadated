@@ -515,7 +515,7 @@ class _MetricCard extends StatelessWidget {
     final w = (MediaQuery.of(context).size.width - 14 * 2 - 12) / 2;
     return SizedBox(
       width: w,
-      height: 155,
+      height: 140,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -539,11 +539,11 @@ class _MetricCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (iconAsset != null)
-                  Image.asset(iconAsset!, height: 48, fit: BoxFit.contain)
+                  Image.asset(iconAsset!, height: 42, fit: BoxFit.contain)
                 else
                   Icon(
                     iconData ?? Icons.sensors,
-                    size: 38,
+                    size: 36,
                     color: Colors.black87,
                   ),
                 const SizedBox(height: 6),
@@ -553,7 +553,7 @@ class _MetricCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: statusColor,
                   ),
@@ -640,6 +640,8 @@ String? _metricIconAsset(String name) {
       return 'assets/icons/poultry_noise.png';
     case 'methane_ppm':
       return 'assets/icons/poultry_ch4.png';
+    case 'light_intensity':
+      return 'assets/icons/poultry_light_intensity.png';
     default:
       return null;
   }

@@ -10,6 +10,7 @@ import '../response/graph_response.dart';
 import '../response/pond_data_response.dart';
 import '../response/pond_list_response.dart';
 import '../response/sensor_list_response.dart';
+import '../response/aerator_automation_response.dart';
 import '../service/failure.dart';
 import '../service/service.dart';
 import 'package:more_fish/app/service/local_storage.dart';
@@ -291,6 +292,69 @@ class DevicesRepository {
         );
       } finally {
         client.close();
+      }
+    } catch (e) {
+      return Left(Failure('Error: $e'));
+    }
+  }
+
+  Future<Either<Failure, AeratorAutomationResponse>> getAutomationSettings({
+    required dynamic deviceId,
+    bool isPharmaFlow = false,
+  }) async {
+    try {
+      var token = _getToken(isPharmaFlow: isPharmaFlow);
+      var headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      var url = Uri.parse("${ApiService.baseUrl}/devices/aerator-automation/?device_id=$deviceId");
+      debugPrint('Automation Settings GET: $url');
+
+      var response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        return Right(AeratorAutomationResponse.fromRawJson(response.body));
+      } else {
+        return Left(Failure('Failed to fetch automation settings: ${response.statusCode}'));
+      }
+    } catch (e) {
+      return Left(Failure('Error: $e'));
+    }
+  }
+
+  Future<Either<Failure, AeratorAutomationResponse>> saveAutomationSettings({
+    required dynamic deviceId,
+    required bool isEnabled,
+    required double doMin,
+    required double doMax,
+    bool isPharmaFlow = false,
+  }) async {
+    try {
+      var token = _getToken(isPharmaFlow: isPharmaFlow);
+      var headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      var url = Uri.parse("${ApiService.baseUrl}/devices/aerator-automation/?device_id=$deviceId");
+      debugPrint('Automation Settings POST: $url');
+
+      var body = jsonEncode({
+        "device_id": deviceId,
+        "is_enabled": isEnabled,
+        "do_min": doMin,
+        "do_max": doMax,
+      });
+      debugPrint('Automation Settings Body: $body');
+
+      var response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Right(AeratorAutomationResponse.fromRawJson(response.body));
+      } else {
+        return Left(Failure('Failed to save automation settings: ${response.statusCode}'));
       }
     } catch (e) {
       return Left(Failure('Error: $e'));

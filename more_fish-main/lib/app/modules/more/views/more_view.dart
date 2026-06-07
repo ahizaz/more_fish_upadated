@@ -43,17 +43,7 @@ class MoreView extends GetView<MoreController> {
                   itemCount: controller.items.length,
                   itemBuilder: (context, index) {
                     return InkWell(
-                      onTap: (){
-                        if(index == 0){
-                          Get.toNamed(Routes.FAQ);
-                        }
-                        else if(index == 1){
-                          Get.toNamed(Routes.ABOUT_APP);
-                        }
-                        else{
-                          Get.toNamed(Routes.ABOUT_DEVICES);
-                        }
-                      },
+                      onTap: () => controller.navigateToItem(index),
                       child: CommonContainer(
                         height: 50,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

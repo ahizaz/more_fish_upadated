@@ -377,7 +377,14 @@ class _LoggedInDashboard extends StatelessWidget {
     if (n.contains('co2')) return 'assets/icons/cattle_co2.png';
     if (n.contains('pm2_5')) return 'assets/icons/cattle_pm25.png';
     if (n.contains('pm1_0')) return 'assets/icons/cattle_pm10.png';
-    if (n.contains('methane')) return 'assets/icons/cattle_nh3.png';
+    if (n.contains('methane') || n.contains('ch4')) {
+      return 'assets/icons/poultry_ch4.png';
+    }
+    if (n.contains('light')) return 'assets/icons/poultry_light_intensity.png';
+    if (n.contains('sound') || n.contains('noise')) {
+      return 'assets/icons/poultry_noise.png';
+    }
+    if (n.contains('aqi') || n.contains('co')) return 'assets/icons/poultry_co.png';
     return 'assets/icons/cattle_nh3.png';
   }
 
@@ -390,8 +397,11 @@ class _LoggedInDashboard extends StatelessWidget {
     if (n == 'co2') return 'Carbon dioxide';
     if (n == 'pm2_5') return 'PM 2.5';
     if (n == 'pm1_0') return 'PM 1.0';
-    if (n == 'methane_ppm') return 'Methane (CH4)';
-    return n.toUpperCase();
+    if (n == 'methane_ppm' || n == 'ch4') return 'Methane (CH4)';
+    if (n == 'aqi') return 'AQI';
+    if (n == 'sound_db') return 'Sound';
+    if (n == 'light_intensity') return 'Light intensity';
+    return n.toUpperCase().replaceAll('_', ' ');
   }
 }
 
@@ -428,6 +438,8 @@ class _DeviceDropdown extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 )
@@ -479,6 +491,8 @@ class _DeviceHeader extends StatelessWidget {
           child: Text(
             deviceName,
             style: const TextStyle(fontWeight: FontWeight.w600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         Text(

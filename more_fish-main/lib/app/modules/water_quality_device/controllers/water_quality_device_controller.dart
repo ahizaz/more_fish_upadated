@@ -29,6 +29,7 @@ class WaterQualityDeviceController extends GetxController {
   var isFetching = false.obs;
   var commandInProgress = false.obs;
   var busyAeratorPks = <int>{}.obs;
+  var isAutomationEnabled = false.obs;
   bool _firstFetch = true;
 
   var aeratorIds = <int>[].obs;
@@ -174,6 +175,7 @@ class WaterQualityDeviceController extends GetxController {
           if (deviceId != null && deviceId.toString().isNotEmpty) {
             debugPrint('[Flow] sensorList() triggered -> device_id: $deviceId');
             sensorList(deviceId: deviceId);
+            fetchAutomationStatus(deviceId);
           }
         } catch (e) {
           debugPrint('Failed to extract device id: $e');
@@ -427,7 +429,18 @@ class WaterQualityDeviceController extends GetxController {
 
   bool isAeratorBusy(int aeratorPk) => busyAeratorPks.contains(aeratorPk);
 
-  // ==================== UPDATED AERATOR COMMAND ====================
+  Future<void> fetchAutomationStatus(dynamic deviceId) async {
+    final response = await devicesRepository.getAutomationSettings(deviceId: deviceId);
+    response.fold(
+      (l) => debugPrint('Automation Status fetch failed'),
+      (r) {
+        if (r.data != null) {
+          isAutomationEnabled.value = r.data!.isEnabled ?? false;
+        }
+      },
+    );
+  }
+
   aeratorCommand({
     id,
     command,
@@ -473,17 +486,6 @@ class WaterQualityDeviceController extends GetxController {
         String errorMsg = l.message;
         debugPrint('[API] setAeratorCommand() failed -> $errorMsg');
 
-        try {
-          Get.rawSnackbar(
-            title: 'Error',
-            message: errorMsg,
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red.withOpacity(0.8),
-            margin: const EdgeInsets.all(10),
-            borderRadius: 10,
-          );
-        } catch (_) {}
-
         // No optimistic update, so no need to revert switch
         if (pk != null) {
           busyAeratorPks.remove(pk);
@@ -496,17 +498,6 @@ class WaterQualityDeviceController extends GetxController {
         // Success case
         debugPrint('[API] setAeratorCommand() success -> ${r.msg}');
         aeratorCommandResponse.value = r;
-
-        try {
-          Get.rawSnackbar(
-            title: 'Success',
-            message: r.msg ?? 'Command sent successfully',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green.withOpacity(0.8),
-            margin: const EdgeInsets.all(10),
-            borderRadius: 10,
-          );
-        } catch (_) {}
 
         // Refresh pond data to get latest is_running state from server
         pondData(id: selectedAstId.value);

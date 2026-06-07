@@ -952,9 +952,8 @@ class WaterQualityDeviceView extends GetView<WaterQualityDeviceController> {
     if (parsedValue == null) return '0';
 
     final normalizedSensorName = sensorName?.trim().toUpperCase();
-    final displayValue = normalizedSensorName == 'DO'
-        ? parsedValue.clamp(1.62, 16.0).toDouble()
-        : parsedValue;
+    // DO value restriction (clamped 1.62 - 16.0) removed as requested.
+    final displayValue = parsedValue;
 
     return displayValue.toStringAsFixed(2);
   }
@@ -1595,40 +1594,97 @@ class WaterQualityDeviceView extends GetView<WaterQualityDeviceController> {
                                                           const SizedBox(
                                                             width: 12,
                                                           ),
-                                                          SizedBox(
-                                                            width: MediaQuery.of(
-                                                                  context,
-                                                                ).size.width -
-                                                                220,
-                                                            child: CommonText(
-                                                              aerator.aeratorName,
-                                                              fontSize: 20,
-                                                              fontWeight:
-                                                                  FontWeight.bold,
-                                                              overflow:
-                                                                  TextOverflow.ellipsis,
-                                                              maxLines: 1,
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                    context,
+                                                                  ).size.width -
+                                                                  220,
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  CommonText(
+                                                                    aerator
+                                                                        .aeratorName,
+                                                                    fontSize: 20,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                    maxLines: 1,
+                                                                  ),
+                                                                  if (controller
+                                                                      .isAutomationEnabled
+                                                                      .value)
+                                                                    const CommonText(
+                                                                      'Auto Mode',
+                                                                      fontSize: 12,
+                                                                      color: Colors
+                                                                          .blue,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                    ),
+                                                                ],
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ],
-                                                      ),
+                                                          ],
+                                                        ),
+                                                        // CommonSwitch(
+                                                        //   value: switchValue,
+                                                        //   onChanged: (bool value) {
+                                                        //     if (controller.isAutomationEnabled.value) {
+                                                        //       controller.showAutomationWarning();
+                                                        //       return;
+                                                        //     }
+                                                        //     if (!isOnline || controller.isAeratorBusy(aerator.aeratorPk)) {
+                                                        //       return;
+                                                        //     }
+                                                        //     controller.aeratorCommand(
+                                                        //       id: aerator.aeratorId,
+                                                        //       command: value ? 1 : 0,
+                                                        //       index: index,
+                                                        //       isOnline: isOnline,
+                                                        //       aeratorPk: aerator.aeratorPk,
+                                                        //     );
+                                                        //   },
+                                                        //   activeColor: Colors.green,
+                                                        //   inactiveColor: Colors.red,
+                                                        // ),
                                                       CommonSwitch(
                                                         value: switchValue,
-                                                        onChanged: !isOnline ||
-                                                                controller.isAeratorBusy(
-                                                                  aerator.aeratorPk,
-                                                                )
-                                                            ? null
-                                                            : (bool value) {
-                                                                controller.aeratorCommand(
-                                                                  id: aerator.aeratorId,
-                                                                  command: value ? 1 : 0,
-                                                                  index: index,
-                                                                  isOnline: isOnline,
-                                                                  aeratorPk:
-                                                                      aerator.aeratorPk,
-                                                                );
-                                                              },
+                                                        onChanged: (bool value) {
+                                                          // Block manual control when automation is enabled
+                                                          if (controller.isAutomationEnabled.value) {
+                                                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                              const SnackBar(
+                                                                content: Text(
+                                                                  'Manual control is disabled while Automation is ON.',
+                                                                ),
+                                                                duration: Duration(seconds: 2),
+                                                              ),
+                                                            );
+
+                                                            return;
+                                                          }
+
+                                                          if (!isOnline || controller.isAeratorBusy(aerator.aeratorPk)) {
+                                                            return;
+                                                          }
+
+                                                          controller.aeratorCommand(
+                                                            id: aerator.aeratorId,
+                                                            command: value ? 1 : 0,
+                                                            index: index,
+                                                            isOnline: isOnline,
+                                                            aeratorPk: aerator.aeratorPk,
+                                                          );
+                                                        },
                                                         activeColor: Colors.green,
                                                         inactiveColor: Colors.red,
                                                       ),

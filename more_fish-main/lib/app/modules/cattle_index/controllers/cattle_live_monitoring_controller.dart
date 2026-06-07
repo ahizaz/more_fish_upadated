@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../../../repo/cattle_live_repo.dart';
@@ -141,7 +141,7 @@ class CattleLiveMonitoringController extends GetxController {
     );
     result.fold(
       (l) {
-        Get.snackbar("Error", l.message, snackPosition: SnackPosition.BOTTOM);
+        debugPrint('Cattle Switch Error: ${l.message}');
       },
       (r) {
         refreshLiveData(showLoader: false);

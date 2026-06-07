@@ -77,27 +77,23 @@ class _CommonSwitchState extends State<CommonSwitch>
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            color: isDisabled
-                ? Colors.grey.shade300
-                : widget.value
-                    ? widget.activeColor.withOpacity(0.25)
-                    : widget.inactiveColor.withOpacity(0.25),
+            color: widget.value
+                ? widget.activeColor.withOpacity(0.25)
+                : widget.inactiveColor.withOpacity(0.25),
             border: Border.all(
-              color: isDisabled
-                  ? Colors.grey.shade400
-                  : widget.value
-                      ? widget.activeColor.withOpacity(0.5)
-                      : widget.inactiveColor.withOpacity(0.5),
+              color: widget.value
+                  ? widget.activeColor.withOpacity(0.5)
+                  : widget.inactiveColor.withOpacity(0.5),
               width: 1.5,
             ),
             boxShadow: [
-              if (!isDisabled && widget.value)
+              if (widget.value)
                 BoxShadow(
                   color: widget.activeColor.withOpacity(0.3),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
-              if (!isDisabled && !widget.value)
+              if (!widget.value)
                 BoxShadow(
                   color: widget.inactiveColor.withOpacity(0.1),
                   blurRadius: 4,
@@ -108,18 +104,15 @@ class _CommonSwitchState extends State<CommonSwitch>
           child: AnimatedAlign(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
-            alignment: widget.value ? Alignment.centerRight : Alignment.centerLeft,
+            alignment:
+                widget.value ? Alignment.centerRight : Alignment.centerLeft,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               width: 20,
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDisabled
-                    ? Colors.grey.shade500
-                    : widget.value
-                        ? widget.activeColor
-                        : widget.inactiveColor,
+                color: widget.value ? widget.activeColor : widget.inactiveColor,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.2),

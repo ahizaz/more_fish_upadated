@@ -8,6 +8,8 @@ import '../modules/about_devices/bindings/about_devices_binding.dart';
 import '../modules/about_devices/views/about_devices_view.dart';
 import '../modules/about_devices_details/bindings/about_devices_details_binding.dart';
 import '../modules/about_devices_details/views/about_devices_details_view.dart';
+import '../modules/automation_settings/bindings/automation_settings_binding.dart';
+import '../modules/automation_settings/views/automation_settings_view.dart';
 import '../modules/aerator_connection/bindings/aerator_connection_binding.dart';
 import '../modules/aerator_connection/views/aerator_connection_view.dart';
 import '../modules/cattle_index/bindings/cattle_index_binding.dart';
@@ -379,6 +381,11 @@ class AppPages {
       name: _Paths.NANO_BUBBLE,
       page: () => const NanoBubbleView(),
       binding: NanoBubbleBinding(),
+    ),
+    GetPage(
+      name: _Paths.AUTOMATION_SETTINGS,
+      page: () => const AutomationSettingsView(),
+      binding: AutomationSettingsBinding(),
     ),
   ];
 }

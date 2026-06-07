@@ -24,20 +24,26 @@ class AboutAppView extends GetView<AboutAppController> {
           Obx(() {
             if (isCattle) {
               final cattleHeader = Get.find<CattleHeaderController>();
+              // Access observables to register with Obx
+              final district = cattleHeader.district.value;
+              final _ = cattleHeader.tempText.value;
               return _CattleCareHeader(header: cattleHeader);
             }
 
-            final weather = homeController.weatherData.value;
-            final main = (weather.isNotEmpty && weather.containsKey('main'))
+            final weather = homeController.weatherData;
+            final main = (weather != null && weather.isNotEmpty)
                 ? weather['main']
                 : null;
+            final temp = main != null ? (main['temp'] ?? '--') : '--';
+            final humidity = main != null ? (main['humidity'] ?? '--') : '--';
+
             return CommonAppBar(
               title: 'title'.tr,
               cityName: "dhaka".tr,
               date: homeController.formattedDate.value,
               time: homeController.formattedTime.value,
-              temp: main != null ? '${main['temp']}°C' : '',
-              humidity: main != null ? '${main['humidity']}%' : '',
+              temp: '$temp°C',
+              humidity: '$humidity%',
             );
           }),
           Expanded(
