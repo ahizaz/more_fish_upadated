@@ -32,7 +32,15 @@ class CattleLiveMonitoringController extends GetxController {
   void onInit() {
     super.onInit();
     debugPrint('CattleMonitoringController: onInit');
-    fetchFarmList();
+    
+    // Only fetch if we don't have data yet to prevent every-time-loading
+    if (cattleFarmListResponse.value == null) {
+      fetchFarmList();
+    } else {
+      // Silently refresh in background if we already have "cached" data in the controller
+      refreshLiveData(showLoader: false);
+    }
+    
     _startBackgroundRefresh();
   }
 
@@ -44,8 +52,9 @@ class CattleLiveMonitoringController extends GetxController {
 
   void _startBackgroundRefresh() {
     _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       final route = Get.currentRoute.toLowerCase();
+      // Only refresh if user is still in the cattle module to save resources
       if (selectedDeviceId.value.isNotEmpty && route.contains('cattle')) {
         refreshLiveData(showLoader: false);
       }
@@ -67,7 +76,11 @@ class CattleLiveMonitoringController extends GetxController {
 
   Future<void> fetchFarmList() async {
     debugPrint('CattleMonitoring: fetchFarmList() start');
-    isLoading.value = true;
+    
+    // Only show full-screen loader if we have NO data yet
+    if (cattleFarmListResponse.value == null) {
+      isLoading.value = true;
+    }
     error.value = '';
 
     try {
@@ -107,7 +120,9 @@ class CattleLiveMonitoringController extends GetxController {
     bool showLoader = true,
   }) async {
     debugPrint('CattleMonitoring: fetchFarmDashboard(id: $id) start');
-    if (showLoader) {
+    
+    // Only show loader if requested AND we don't have data for THIS device yet
+    if (showLoader && (cattleFarmDashboardResponse.value == null || selectedDeviceId.value != id)) {
       isLoading.value = true;
     }
     error.value = '';

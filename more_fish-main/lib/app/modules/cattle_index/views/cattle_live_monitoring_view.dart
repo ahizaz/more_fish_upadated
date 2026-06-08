@@ -15,7 +15,7 @@ class CattleLiveMonitoringView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final header = Get.find<CattleHeaderController>();
-    final ctrl = Get.put(CattleLiveMonitoringController());
+    final ctrl = Get.find<CattleLiveMonitoringController>();
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
