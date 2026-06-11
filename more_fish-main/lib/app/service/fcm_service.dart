@@ -64,6 +64,16 @@ class FcmService {
   static final FirebaseMessaging _firebaseMessaging =
       FirebaseMessaging.instance;
 
+
+  static bool _isUserLoggedIn() {
+    final storage = Get.find<LoginTokenStorage>();
+
+    return storage.hasValidMoreFishToken() ||
+        storage.hasValidPoultryToken() ||
+        storage.hasValidCattleToken() ||
+        storage.hasValidPharmaToken();
+  }
+
   static Future<void> initialize() async {
     await _initializeLocalNotifications();
 
@@ -106,6 +116,13 @@ class FcmService {
 
     FirebaseMessaging.onMessage.listen(
           (RemoteMessage message) async {
+
+            if (!_isUserLoggedIn()) {
+              debugPrint(
+                'User not logged in. Ignoring notification.',
+              );
+              return;
+            }
         debugPrint(
           'Got a message whilst in the foreground!',
         );
@@ -147,6 +164,10 @@ class FcmService {
 
     FirebaseMessaging.onMessageOpenedApp.listen(
           (RemoteMessage message) {
+
+            if (!_isUserLoggedIn()) {
+              return;
+            }
         debugPrint(
           'A new onMessageOpenedApp event was published!',
         );
@@ -158,7 +179,20 @@ class FcmService {
     final initialMessage =
     await _firebaseMessaging.getInitialMessage();
 
-    if (initialMessage != null) {
+    // if (initialMessage != null) {
+    //   Future.delayed(
+    //     const Duration(seconds: 1),
+    //         () {
+    //       _handleMessageNavigation(
+    //         initialMessage,
+    //       );
+    //     },
+    //   );
+    // }
+    if (
+    initialMessage != null &&
+        _isUserLoggedIn()
+    ) {
       Future.delayed(
         const Duration(seconds: 1),
             () {
