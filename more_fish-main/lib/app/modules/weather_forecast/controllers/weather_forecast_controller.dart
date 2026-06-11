@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../service/service.dart';
-
 
 class WeatherForecastController extends GetxController {
   final String apiKey = ApiService.apiKey;
@@ -14,25 +14,42 @@ class WeatherForecastController extends GetxController {
   var errorMessage = ''.obs;
 
   final List<String> locations = [
-    'Dhaka',
-    'Chittagong',
-    'Sylhet',
-    'Rajshahi',
-    'Khulna',
-    'Barisal',
-    'Rangpur',
-    'Mymensingh',
-    'Gazipur',
-    'Narayanganj',
-    'Comilla',
+    'Bagerhat', 'Bandarban', 'Barguna', 'Barisal', 'Bhola', 'Bogra',
+    'Brahmanbaria', 'Chandpur', 'Chapainawabganj', 'Chittagong',
+    'Chuadanga', 'Comilla', 'Cox\'s Bazar', 'Dhaka', 'Dinajpur',
+    'Faridpur', 'Feni', 'Gaibandha', 'Gazipur', 'Gopalganj',
+    'Habiganj', 'Jamalpur', 'Jessore', 'Jhalokati', 'Jhenaidah',
+    'Joypurhat', 'Khagrachhari', 'Khulna', 'Kishoreganj', 'Kurigram',
+    'Kushtia', 'Lakshmipur', 'Lalmonirhat', 'Madaripur', 'Magura',
+    'Manikganj', 'Meherpur', 'Moulvibazar', 'Munshiganj', 'Mymensingh',
+    'Naogaon', 'Narail', 'Narayanganj', 'Narsingdi', 'Natore',
+    'Netrokona', 'Nilphamari', 'Noakhali', 'Pabna', 'Panchagarh',
+    'Patuakhali', 'Pirojpur', 'Rajbari', 'Rajshahi', 'Rangamati',
+    'Rangpur', 'Satkhira', 'Shariatpur', 'Sherpur', 'Sirajganj',
+    'Sunamganj', 'Sylhet', 'Tangail', 'Thakurgaon'
   ];
 
   var selectedLocation = 'Dhaka'.obs;
+  static const String _storageKey = 'last_selected_district';
 
   @override
   void onInit() {
     super.onInit();
+    _loadSavedLocation();
+  }
+
+  Future<void> _loadSavedLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_storageKey);
+    if (saved != null && locations.contains(saved)) {
+      selectedLocation.value = saved;
+    }
     fetchWeatherData(selectedLocation.value);
+  }
+
+  Future<void> _saveLocation(String city) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_storageKey, city);
   }
 
   Future<void> fetchWeatherData(String city) async {
@@ -44,12 +61,12 @@ class WeatherForecastController extends GetxController {
     try {
       // Fetch Current Weather
       final weatherUrl = Uri.parse(
-          'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric');
+          'https://api.openweathermap.org/data/2.5/weather?q=$city,BD&appid=$apiKey&units=metric');
       final weatherResponse = await http.get(weatherUrl);
 
       // Fetch 5-day / 3-hour Forecast
       final forecastUrl = Uri.parse(
-          'https://api.openweathermap.org/data/2.5/forecast?q=$city&appid=$apiKey&units=metric');
+          'https://api.openweathermap.org/data/2.5/forecast?q=$city,BD&appid=$apiKey&units=metric');
       final forecastResponse = await http.get(forecastUrl);
 
       if (weatherResponse.statusCode == 200 &&
@@ -57,6 +74,7 @@ class WeatherForecastController extends GetxController {
         weatherData.value = json.decode(weatherResponse.body);
         var forecastJson = json.decode(forecastResponse.body);
         forecastData.value = forecastJson['list'] ?? [];
+        _saveLocation(city);
       } else {
         errorMessage.value = 'Failed to load weather data';
       }
@@ -66,9 +84,8 @@ class WeatherForecastController extends GetxController {
       isLoading.value = false;
     }
   }
-
-
-
-
-
 }
+
+
+
+

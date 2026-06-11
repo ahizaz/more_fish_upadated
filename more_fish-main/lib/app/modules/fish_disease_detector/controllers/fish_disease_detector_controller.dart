@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:more_fish/app/service/local_storage.dart';
+import 'package:more_fish/app/service/service.dart';
 
 class FishDiseaseDetectorController extends GetxController {
-  static const String _endpoint =
-      'http://66.29.151.40:8004/devices/fish-disease/detect/';
-  static const String _token = '21067c389d5d27d6ecfd22dc13e0ccb792714ad6';
+  final _loginTokenStorage = Get.find<LoginTokenStorage>();
+  
+  String get _endpoint =>
+      '${ApiService.baseUrl}/devices/fish-disease/detect/';
 
   final ImagePicker _picker = ImagePicker();
 
@@ -36,6 +39,12 @@ class FishDiseaseDetectorController extends GetxController {
       return;
     }
 
+    final token = _loginTokenStorage.getMoreFishToken();
+    if (token == null || token.isEmpty) {
+      errorMessage.value = 'You are not logged in. Please log in first.';
+      return;
+    }
+
     isLoading.value = true;
     errorMessage.value = '';
     disease.value = '';
@@ -43,7 +52,7 @@ class FishDiseaseDetectorController extends GetxController {
 
     try {
       final request = http.MultipartRequest('POST', Uri.parse(_endpoint));
-      request.headers['Authorization'] = 'Bearer $_token';
+      request.headers['Authorization'] = 'Bearer $token';
       request.files.add(await http.MultipartFile.fromPath('file', image.path));
 
       final streamedResponse = await request.send();

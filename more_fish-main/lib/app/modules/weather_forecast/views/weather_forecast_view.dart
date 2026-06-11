@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:intl/intl.dart';
 import '../../../common_widgets/common_text.dart';
 import '../controllers/weather_forecast_controller.dart';
@@ -9,6 +10,8 @@ class WeatherForecastView extends GetView<WeatherForecastController> {
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController textEditingController = TextEditingController();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -35,7 +38,7 @@ class WeatherForecastView extends GetView<WeatherForecastController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLocationDropdown(),
+                _buildSearchableDropdown(context, textEditingController),
                 const SizedBox(height: 20),
                 if (controller.isLoading.value)
                   const Center(child: CircularProgressIndicator())
@@ -71,28 +74,90 @@ class WeatherForecastView extends GetView<WeatherForecastController> {
     );
   }
 
-  Widget _buildLocationDropdown() {
+  Widget _buildSearchableDropdown(
+      BuildContext context, TextEditingController textEditingController) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.blue.shade200),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: controller.selectedLocation.value,
+        child: DropdownButton2<String>(
           isExpanded: true,
-          items: controller.locations.map((String city) {
-            return DropdownMenuItem<String>(
-              value: city,
-              child: Text(city, style: const TextStyle(fontSize: 18)),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              controller.selectedLocation.value = newValue;
-              controller.fetchWeatherData(newValue);
+          hint: Text(
+            'Select District',
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).hintColor,
+            ),
+          ),
+          items: controller.locations
+              .map((item) => DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(
+                      item,
+                      style: const TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                  ))
+              .toList(),
+          value: controller.selectedLocation.value,
+          onChanged: (value) {
+            if (value != null) {
+              controller.selectedLocation.value = value;
+              controller.fetchWeatherData(value);
+            }
+          },
+          buttonStyleData: const ButtonStyleData(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            height: 50,
+            width: double.infinity,
+          ),
+          dropdownStyleData: const DropdownStyleData(
+            maxHeight: 400,
+          ),
+          menuItemStyleData: const MenuItemStyleData(
+            height: 45,
+          ),
+          dropdownSearchData: DropdownSearchData(
+            searchController: textEditingController,
+            searchInnerWidgetHeight: 50,
+            searchInnerWidget: Container(
+              height: 50,
+              padding: const EdgeInsets.only(
+                top: 8,
+                bottom: 4,
+                right: 8,
+                left: 8,
+              ),
+              child: TextFormField(
+                expands: true,
+                maxLines: null,
+                controller: textEditingController,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  hintText: 'Search for a district...',
+                  hintStyle: const TextStyle(fontSize: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+            searchMatchFn: (item, searchValue) {
+              return item.value.toString().toLowerCase().contains(searchValue.toLowerCase());
+            },
+          ),
+          //This to clear the search value when you close the menu
+          onMenuStateChange: (isOpen) {
+            if (!isOpen) {
+              textEditingController.clear();
             }
           },
         ),
