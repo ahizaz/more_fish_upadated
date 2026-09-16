@@ -13,6 +13,7 @@ import 'poultry_live_models.dart';
 import 'poultry_live_repo.dart';
 
 class PoultryApiLiveRepository implements PoultryLiveRepository {
+  ///
   static const String _fallbackBearerToken =
       '21067c389d5d27d6ecfd22dc13e0ccb792714ad6';
 
@@ -22,8 +23,8 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
       Uri.parse('$_poultryBaseUrl/poultry_care/farms/list/');
 
   Uri _farmDashboardUri(int farmId) => Uri.parse(
-        '$_poultryBaseUrl/poultry_care/farms/dashboard/?farm_id=$farmId',
-      );
+    '$_poultryBaseUrl/poultry_care/farms/dashboard/?farm_id=$farmId',
+  );
 
   Uri get _switchCommandUri =>
       Uri.parse('$_poultryBaseUrl/poultry_care/switches/command/');
@@ -88,9 +89,11 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
       if (response.statusCode == 200) {
         return Right(PoultryAutomationResponse.fromRawJson(response.body));
       } else {
-        return Left(Failure(
-          'Failed to fetch automation settings: ${response.statusCode}',
-        ));
+        return Left(
+          Failure(
+            'Failed to fetch automation settings: ${response.statusCode}',
+          ),
+        );
       }
     } catch (e) {
       return Left(Failure('Error: $e'));
@@ -124,9 +127,9 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return Right(PoultryAutomationResponse.fromRawJson(response.body));
       } else {
-        return Left(Failure(
-          'Failed to save automation settings: ${response.statusCode}',
-        ));
+        return Left(
+          Failure('Failed to save automation settings: ${response.statusCode}'),
+        );
       }
     } catch (e) {
       return Left(Failure('Error: $e'));
@@ -156,7 +159,9 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return const Right(true);
       } else {
-        return Left(Failure('Failed to add light schedule: ${response.statusCode}'));
+        return Left(
+          Failure('Failed to add light schedule: ${response.statusCode}'),
+        );
       }
     } catch (e) {
       return Left(Failure('Error: $e'));
@@ -175,9 +180,9 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
       if (response.statusCode == 200) {
         return const Right(true);
       } else {
-        return Left(Failure(
-          'Failed to delete light schedule: ${response.statusCode}',
-        ));
+        return Left(
+          Failure('Failed to delete light schedule: ${response.statusCode}'),
+        );
       }
     } catch (e) {
       return Left(Failure('Error: $e'));
@@ -220,7 +225,8 @@ class PoultryApiLiveRepository implements PoultryLiveRepository {
   PoultryDevice _toFarmDevice(Map<String, dynamic> farm) {
     return PoultryDevice(
       id: farm['id'].toString(),
-      name: (farm['name'] ?? farm['location'] ?? 'Farm ${farm['id']}').toString(),
+      name: (farm['name'] ?? farm['location'] ?? 'Farm ${farm['id']}')
+          .toString(),
     );
   }
 
