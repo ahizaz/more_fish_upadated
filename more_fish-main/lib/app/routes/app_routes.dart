@@ -5,6 +5,7 @@ abstract class Routes {
   Routes._();
   static const DMA_TECHNOLOGIES = _Paths.DMA_TECHNOLOGIES;
   static const COMING_SOON = _Paths.COMING_SOON;
+  static const FARMER_DATA = _Paths.FARMER_DATA;
   static const HOME = _Paths.HOME;
   static const INDEX = _Paths.INDEX;
   static const POULTRY_INDEX = _Paths.POULTRY_INDEX;
@@ -66,6 +67,7 @@ abstract class _Paths {
   _Paths._();
   static const DMA_TECHNOLOGIES = '/dma-technologies';
   static const COMING_SOON = '/coming-soon';
+  static const FARMER_DATA = '/farmer-data';
   static const HOME = '/home';
   static const INDEX = '/index';
   static const POULTRY_INDEX = '/poultry-index';

@@ -30,7 +30,7 @@ class MoreController extends GetxController {
         _handleAutomationNavigation();
         break;
       case 4:
-        Get.toNamed(Routes.COMING_SOON, arguments: {'title': "Farmer's Data"});
+        Get.toNamed(Routes.FARMER_DATA);
         break;
     }
   }

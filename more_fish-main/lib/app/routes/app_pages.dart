@@ -34,6 +34,7 @@ import '../modules/faq/bindings/faq_binding.dart';
 import '../modules/faq/views/faq_view.dart';
 import '../modules/faq_details/bindings/faq_details_binding.dart';
 import '../modules/faq_details/views/faq_details_view.dart';
+import '../modules/farmer_data/views/farmer_data_view.dart';
 import '../modules/farm_management/bindings/farm_management_binding.dart';
 import '../modules/farm_management/views/farm_management_view.dart';
 import '../modules/farm_management_details/bindings/farm_management_details_binding.dart';
@@ -131,6 +132,7 @@ class AppPages {
       page: () => const ComingSoonView(),
       binding: ComingSoonBinding(),
     ),
+    GetPage(name: _Paths.FARMER_DATA, page: () => const FarmerDataView()),
     GetPage(
       name: _Paths.HOME,
       page: () => const HomeView(),
