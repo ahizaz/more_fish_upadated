@@ -12,6 +12,7 @@ class MoreController extends GetxController {
     "About App",
     "About Device",
     "Automation Settings",
+    "Farmer's Data (For Official use only)",
   ];
 
   void navigateToItem(int index) {
@@ -27,6 +28,9 @@ class MoreController extends GetxController {
         break;
       case 3:
         _handleAutomationNavigation();
+        break;
+      case 4:
+        Get.toNamed(Routes.COMING_SOON, arguments: {'title': "Farmer's Data"});
         break;
     }
   }
@@ -61,7 +65,10 @@ class MoreController extends GetxController {
     }
 
     if (deviceId != null) {
-      Get.toNamed(Routes.AUTOMATION_SETTINGS, arguments: {'deviceId': deviceId});
+      Get.toNamed(
+        Routes.AUTOMATION_SETTINGS,
+        arguments: {'deviceId': deviceId},
+      );
     } else {
       debugPrint('Automation error: Device ID is null and not found in cache');
       // Show a snackbar only if absolutely necessary, but since user said "dont need to show any snackbar"
@@ -83,5 +90,4 @@ class MoreController extends GetxController {
   void onClose() {
     super.onClose();
   }
-
 }
