@@ -60,6 +60,21 @@ class _FarmerDataViewState extends State<FarmerDataView> {
       type: r'integer($int64)',
       keyboardType: TextInputType.number,
     ),
+    _FarmerField(
+      'tank_count',
+      type: r'integer($int64)',
+      keyboardType: TextInputType.number,
+    ),
+    _FarmerField(
+      'iprs_cell_count',
+      type: r'integer($int64)',
+      keyboardType: TextInputType.number,
+    ),
+    _FarmerField(
+      'raceway_count',
+      type: r'integer($int64)',
+      keyboardType: TextInputType.number,
+    ),
     _FarmerField('primary_species'),
     _FarmerField('primary_species_other'),
     _FarmerField(
@@ -142,7 +157,11 @@ class _FarmerDataViewState extends State<FarmerDataView> {
       type: 'boolean',
       options: ['true', 'false'],
     ),
-    _FarmerField('automatic_alert', type: 'boolean', options: ['true', 'false']),
+    _FarmerField(
+      'automatic_alert',
+      type: 'boolean',
+      options: ['true', 'false'],
+    ),
     _FarmerField(
       'mobile_realtime_data',
       type: 'boolean',
@@ -172,7 +191,11 @@ class _FarmerDataViewState extends State<FarmerDataView> {
       keyboardType: TextInputType.number,
     ),
     _FarmerField('aerator_decision_method'),
-    _FarmerField('aerator_24_hours', type: 'boolean', options: ['true', 'false']),
+    _FarmerField(
+      'aerator_24_hours',
+      type: 'boolean',
+      options: ['true', 'false'],
+    ),
     _FarmerField('electricity_source'),
     _FarmerField(
       'backup_power_available',
@@ -215,7 +238,11 @@ class _FarmerDataViewState extends State<FarmerDataView> {
       type: 'boolean',
       options: ['true', 'false'],
     ),
-    _FarmerField('problem_ammonia', type: 'boolean', options: ['true', 'false']),
+    _FarmerField(
+      'problem_ammonia',
+      type: 'boolean',
+      options: ['true', 'false'],
+    ),
     _FarmerField(
       'problem_algal_bloom_crash',
       type: 'boolean',
@@ -298,10 +325,7 @@ class _FarmerDataViewState extends State<FarmerDataView> {
       type: 'boolean',
       options: ['true', 'false'],
     ),
-    _FarmerField(
-      'impact_confidence',
-      options: ['YES', 'NO', 'NOT_SURE'],
-    ),
+    _FarmerField('impact_confidence', options: ['YES', 'NO', 'NOT_SURE']),
     _FarmerField(
       'monitoring_staff_count',
       type: r'integer($int64)',
@@ -339,7 +363,13 @@ class _FarmerDataViewState extends State<FarmerDataView> {
     ),
     _FarmerField(
       'daily_decision_maker',
-      options: ['OWNER', 'FARM_MANAGER', 'TECHNICIAN', 'FISHERIES_EXPERT', 'OTHER'],
+      options: [
+        'OWNER',
+        'FARM_MANAGER',
+        'TECHNICIAN',
+        'FISHERIES_EXPERT',
+        'OTHER',
+      ],
     ),
     _FarmerField('daily_decision_maker_other'),
     _FarmerField('technology_decision_maker'),
@@ -393,8 +423,12 @@ class _FarmerDataViewState extends State<FarmerDataView> {
     if (_page < _pageCount - 1) {
       setState(() => _page++);
     } else {
-      Get.snackbar('Form saved', 'Farmer data is ready to submit.');
+      _submit();
     }
+  }
+
+  void _submit() {
+    Get.snackbar('Submitted', 'Farmer data has been submitted successfully.');
   }
 
   @override
@@ -461,7 +495,7 @@ class _FarmerDataViewState extends State<FarmerDataView> {
             onSaved: (value) => _values[field.name] = value?.trim() ?? '',
           )
         : DropdownButtonFormField<String>(
-            value: _values[field.name],
+            initialValue: _values[field.name],
             decoration: _decoration(field),
             items: field.options!
                 .map(
@@ -477,45 +511,56 @@ class _FarmerDataViewState extends State<FarmerDataView> {
                 : null,
           );
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 5,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8, right: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        color: Color(0xff233d67),
-                        fontSize: 14,
-                      ),
-                      children: [
-                        TextSpan(text: field.name),
-                        if (field.requiredField)
-                          const TextSpan(
-                            text: ' *',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    field.type,
-                    style: const TextStyle(color: Colors.black, fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final label = Padding(
+          padding: EdgeInsets.only(
+            top: 8,
+            right: constraints.maxWidth < 560 ? 0 : 12,
           ),
-          Expanded(flex: 7, child: input),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                    color: Color(0xff233d67),
+                    fontSize: 14,
+                  ),
+                  children: [
+                    TextSpan(text: field.name),
+                    if (field.requiredField)
+                      const TextSpan(
+                        text: ' *',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                field.type,
+                style: const TextStyle(color: Colors.black, fontSize: 11),
+              ),
+            ],
+          ),
+        );
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: constraints.maxWidth < 560
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [label, const SizedBox(height: 4), input],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 5, child: label),
+                    Expanded(flex: 7, child: input),
+                  ],
+                ),
+        );
+      },
     );
   }
 
@@ -551,7 +596,7 @@ class _FarmerDataViewState extends State<FarmerDataView> {
           Text('Page ${_page + 1} of $_pageCount'),
           ElevatedButton(
             onPressed: _next,
-            child: Text(_page == _pageCount - 1 ? 'Save' : 'Next'),
+            child: Text(_page == _pageCount - 1 ? 'Submit' : 'Next'),
           ),
         ],
       ),
