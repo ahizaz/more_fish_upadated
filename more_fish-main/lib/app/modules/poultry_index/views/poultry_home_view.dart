@@ -9,7 +9,6 @@ import 'poultry_live_monitoring_view.dart';
 // NOTE: app_routes.dart is a `part of` file (part of app_pages.dart),
 // so it should not be imported directly. Import app_pages.dart instead.
 import '../../../routes/app_pages.dart';
-import '../../cattle_index/controllers/cattle_header_controller.dart';
 
 class PoultryHomeView extends GetView<PoultryIndexController> {
   const PoultryHomeView({super.key});
@@ -68,110 +67,90 @@ class PoultryHomeView extends GetView<PoultryIndexController> {
                         title: 'Farm\nManagement',
                         iconAssetPath:
                             'assets/icons/farm_management/farm_management.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Farm Management'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Farm Management'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Feed\nManagement',
                         iconAssetPath:
                             'assets/icons/farm_management/feed_management.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Feed Management'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Feed Management'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Poultry Disease\nTreatment',
                         iconAssetPath:
                             'assets/icons/farm_management/poultry_disease_treatment.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Poultry Disease Treatment'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Poultry Disease Treatment'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Chicks\nMarketplace',
                         iconAssetPath:
                             'assets/icons/farm_management/chicks_marketplace.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Chicks Marketplace'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Chicks Marketplace'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Poultry Feed\nMarketplace',
                         iconAssetPath:
                             'assets/icons/farm_management/poultry_feed_marketplace.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Poultry Feed Marketplace'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Poultry Feed Marketplace'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Auto Feeder', //
                         iconAssetPath:
                             'assets/icons/farm_management/auto_feeder.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Auto Feeder'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Auto Feeder'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Weather\nForecast',
                         iconAssetPath:
                             'assets/icons/farm_management/weather_forecast.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Weather Forecast'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Weather Forecast'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Live\nConsultancy',
                         iconAssetPath:
                             'assets/icons/farm_management/live_consultancy.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Live Consultancy'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Live Consultancy'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Auto Water\nSystem',
                         iconAssetPath:
                             'assets/icons/farm_management/auto_water_system.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Auto Water System'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Auto Water System'},
                         ),
                       ),
                       _HomeFeatureTile(
                         title: 'Financial\nManagement',
                         iconAssetPath:
                             'assets/icons/farm_management/financial_management.png',
-                        onTap: () => openIfLoggedIn(
-                          () => Get.toNamed(
-                            Routes.COMING_SOON,
-                            arguments: {'title': 'Financial Management'},
-                          ),
+                        onTap: () => Get.toNamed(
+                          Routes.COMING_SOON,
+                          arguments: {'title': 'Financial Management'},
                         ),
                       ),
                     ],
