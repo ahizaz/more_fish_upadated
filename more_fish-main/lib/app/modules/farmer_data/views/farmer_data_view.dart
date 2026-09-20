@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 
 class FarmerDataView extends StatefulWidget {
   const FarmerDataView({super.key});
@@ -392,6 +395,7 @@ class _FarmerDataViewState extends State<FarmerDataView> {
   final _controllers = <String, TextEditingController>{};
   final _values = <String, String>{};
   int _page = 0;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -427,8 +431,170 @@ class _FarmerDataViewState extends State<FarmerDataView> {
     }
   }
 
-  void _submit() {
-    Get.snackbar('Submitted', 'Farmer data has been submitted successfully.');
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
+    final payload = _buildPayload();
+    final uri = Uri.parse('http://66.29.151.40:8004/reports/audits/');
+
+    debugPrint('Farmer audit request body:');
+    debugPrint(const JsonEncoder.withIndent('  ').convert(payload));
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+
+      debugPrint('Farmer audit response: ${response.statusCode}');
+      debugPrint(response.body);
+
+      if (!mounted) return;
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        Get.snackbar(
+          'Submitted',
+          'Farmer data has been submitted successfully.',
+        );
+      } else {
+        Get.snackbar(
+          'Submission failed',
+          'Server returned status ${response.statusCode}.',
+        );
+      }
+    } catch (error) {
+      debugPrint('Farmer audit request error: $error');
+      if (mounted) {
+        Get.snackbar('Submission failed', 'Could not submit farmer data.');
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Map<String, dynamic> _buildPayload() {
+    String text(String name) => _controllers[name]?.text.trim() ?? '';
+    String value(String name) => _values[name] ?? text(name);
+    int? integer(String name) => int.tryParse(value(name));
+    bool? boolean(String name) {
+      final raw = value(name);
+      if (raw.isEmpty) return null;
+      return raw == 'true';
+    }
+
+    return {
+      'audit_date': text('audit_date'),
+      'farm_name': text('farm_name'),
+      'auditor_name': text('auditor_name'),
+      'owner_organization_name': text('owner_organization_name'),
+      'contact_person': text('contact_person'),
+      'contact_designation': text('contact_designation'),
+      'mobile': text('mobile'),
+      'email': text('email'),
+      'gps_location': text('gps_location'),
+      'address': text('address'),
+      'village_area': text('village_area'),
+      'district': text('district'),
+      'union': text('union'),
+      'upazila': text('upazila'),
+      'farm_type': value('farm_type'),
+      'farm_type_other': text('farm_type_other'),
+      'farm_age': value('farm_age'),
+      'total_farm_area': text('total_farm_area'),
+      'farm_area_unit': value('farm_area_unit'),
+      'pond_count': integer('pond_count'),
+      'tank_count': integer('tank_count'),
+      'iprs_cell_count': integer('iprs_cell_count'),
+      'raceway_count': integer('raceway_count'),
+      'primary_species': text('primary_species'),
+      'primary_species_other': text('primary_species_other'),
+      'cycle_duration_months': text('cycle_duration_months'),
+      'average_monthly_production': text('average_monthly_production'),
+      'average_annual_production': text('average_annual_production'),
+      'production_unit': value('production_unit'),
+      'average_selling_price': text('average_selling_price'),
+      'stocking_density': value('stocking_density'),
+      'current_live_fish_value': text('current_live_fish_value'),
+      'monitors_do': boolean('monitors_do'),
+      'monitors_temperature': boolean('monitors_temperature'),
+      'monitors_ph': boolean('monitors_ph'),
+      'monitors_salinity': boolean('monitors_salinity'),
+      'monitors_ammonia': boolean('monitors_ammonia'),
+      'monitors_nitrite': boolean('monitors_nitrite'),
+      'monitors_tds_ec': boolean('monitors_tds_ec'),
+      'monitoring_other': text('monitoring_other'),
+      'monitoring_method': text('monitoring_method'),
+      'monitoring_frequency': text('monitoring_frequency'),
+      'measurement_time': text('measurement_time'),
+      'monitoring_approach': value('monitoring_approach'),
+      'sensor_iot_brand_system': text('sensor_iot_brand_system'),
+      'night_water_monitoring': boolean('night_water_monitoring'),
+      'automatic_alert': boolean('automatic_alert'),
+      'mobile_realtime_data': boolean('mobile_realtime_data'),
+      'night_do_measurement': boolean('night_do_measurement'),
+      'aerator_type': value('aerator_type'),
+      'aerator_type_other': text('aerator_type_other'),
+      'total_aerators': integer('total_aerators'),
+      'aerator_decision_method': text('aerator_decision_method'),
+      'aerator_24_hours': boolean('aerator_24_hours'),
+      'electricity_source': text('electricity_source'),
+      'backup_power_available': boolean('backup_power_available'),
+      'power_backup_types': text('power_backup_types'),
+      'average_power_restore_time_minutes': integer(
+        'average_power_restore_time_minutes',
+      ),
+      'power_aerator_failure_frequency': value(
+        'power_aerator_failure_frequency',
+      ),
+      'problem_low_do': boolean('problem_low_do'),
+      'problem_fish_gasping': boolean('problem_fish_gasping'),
+      'problem_mass_mortality': boolean('problem_mass_mortality'),
+      'problem_ph_fluctuation': boolean('problem_ph_fluctuation'),
+      'problem_temperature_stress': boolean('problem_temperature_stress'),
+      'problem_salinity_fluctuation': boolean('problem_salinity_fluctuation'),
+      'problem_ammonia': boolean('problem_ammonia'),
+      'problem_algal_bloom_crash': boolean('problem_algal_bloom_crash'),
+      'problem_disease_outbreak': boolean('problem_disease_outbreak'),
+      'problem_aerator_failure': boolean('problem_aerator_failure'),
+      'problem_pump_failure': boolean('problem_pump_failure'),
+      'problem_power_failure': boolean('problem_power_failure'),
+      'problem_feed_related': boolean('problem_feed_related'),
+      'problem_water_exchange': boolean('problem_water_exchange'),
+      'problem_staff_monitoring': boolean('problem_staff_monitoring'),
+      'problem_other': text('problem_other'),
+      'top_problem_1': text('top_problem_1'),
+      'top_problem_2': text('top_problem_2'),
+      'top_problem_3': text('top_problem_3'),
+      'major_mortality_event': boolean('major_mortality_event'),
+      'estimated_loss': text('estimated_loss'),
+      'mortality_event_count': integer('mortality_event_count'),
+      'total_mortality_loss': text('total_mortality_loss'),
+      'mortality_possible_cause': value('mortality_possible_cause'),
+      'mortality_cause_other': text('mortality_cause_other'),
+      'water_problem_affects_growth_fcr_production': boolean(
+        'water_problem_affects_growth_fcr_production',
+      ),
+      'impact_confidence': value('impact_confidence'),
+      'monitoring_staff_count': integer('monitoring_staff_count'),
+      'daily_monitoring_hours': text('daily_monitoring_hours'),
+      'monthly_test_kit_cost': text('monthly_test_kit_cost'),
+      'monthly_labour_cost': text('monthly_labour_cost'),
+      'annual_lab_test_cost': text('annual_lab_test_cost'),
+      'monthly_production_loss': text('monthly_production_loss'),
+      'annual_monitoring_cost': text('annual_monitoring_cost'),
+      'daily_decision_maker': value('daily_decision_maker'),
+      'daily_decision_maker_other': text('daily_decision_maker_other'),
+      'technology_decision_maker': text('technology_decision_maker'),
+      'technology_decision_maker_designation': text(
+        'technology_decision_maker_designation',
+      ),
+      'technology_decision_maker_mobile': text(
+        'technology_decision_maker_mobile',
+      ),
+      'technology_adoption_attitude': value('technology_adoption_attitude'),
+      'additional_notes': text('additional_notes'),
+    };
   }
 
   @override
@@ -595,8 +761,14 @@ class _FarmerDataViewState extends State<FarmerDataView> {
           ),
           Text('Page ${_page + 1} of $_pageCount'),
           ElevatedButton(
-            onPressed: _next,
-            child: Text(_page == _pageCount - 1 ? 'Submit' : 'Next'),
+            onPressed: _isSubmitting ? null : _next,
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(_page == _pageCount - 1 ? 'Submit' : 'Next'),
           ),
         ],
       ),
