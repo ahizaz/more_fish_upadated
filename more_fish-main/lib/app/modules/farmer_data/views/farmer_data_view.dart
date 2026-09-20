@@ -661,21 +661,25 @@ class _FarmerDataViewState extends State<FarmerDataView> {
             onSaved: (value) => _values[field.name] = value?.trim() ?? '',
           )
         : DropdownButtonFormField<String>(
-            initialValue: _values[field.name],
-            decoration: _decoration(field),
-            items: field.options!
-                .map(
-                  (option) =>
-                      DropdownMenuItem(value: option, child: Text(option)),
-                )
-                .toList(),
-            onChanged: (value) =>
-                setState(() => _values[field.name] = value ?? ''),
-            onSaved: (value) => _values[field.name] = value ?? '',
-            validator: field.requiredField
-                ? (value) => value == null || value.isEmpty ? 'Required' : null
-                : null,
-          );
+    initialValue: _values[field.name],
+    isExpanded: true,
+    decoration: _decoration(field),
+    items: field.options!
+        .map(
+          (option) => DropdownMenuItem(
+            value: option,
+            child: Text(option),
+          ),
+        )
+        .toList(),
+    onChanged: (value) =>
+        setState(() => _values[field.name] = value ?? ''),
+    onSaved: (value) => _values[field.name] = value ?? '',
+    validator: field.requiredField
+        ? (value) =>
+            value == null || value.isEmpty ? 'Required' : null
+        : null,
+  );
 
     return LayoutBuilder(
       builder: (context, constraints) {
