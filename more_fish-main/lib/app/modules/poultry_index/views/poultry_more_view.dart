@@ -10,20 +10,24 @@ import '../controllers/poultry_index_controller.dart';
 
 class PoultryMoreView extends GetView<PoultryIndexController> {
   const PoultryMoreView({super.key});
-
+  //
   void _handleAutomationNavigation() {
     if (Get.isRegistered<PoultryLiveMonitoringController>()) {
       final ctrl = Get.find<PoultryLiveMonitoringController>();
       final farmId = ctrl.selectedDeviceId.value;
 
       if (farmId.isNotEmpty) {
-        Get.toNamed(Routes.POULTRY_AUTOMATION_SETTINGS,
-            arguments: {'farmId': farmId});
+        Get.toNamed(
+          Routes.POULTRY_AUTOMATION_SETTINGS,
+          arguments: {'farmId': farmId},
+        );
       } else {
         debugPrint('Automation error: Farm ID is null');
       }
     } else {
-      debugPrint('Automation error: PoultryLiveMonitoringController not registered');
+      debugPrint(
+        'Automation error: PoultryLiveMonitoringController not registered',
+      );
     }
   }
 
